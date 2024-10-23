@@ -1,0 +1,68 @@
+
+services:
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: ride-share
+    container_name: ide-share
+    depends_on:
+      - db
+    networks:
+      - app_network
+    restart: unless-stopped
+    volumes:
+      - ./backend:/var/www/html
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+
+  webserver:
+    image: nginx:alpine
+    container_name: ride-share-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+
+
+  db:
+    image: mysql:5.7
+    container_name: ride-share-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: laravel
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_PASSWORD: secret
+      MYSQL_USER: laravel
+    networks:
+      - app_network
+
+
+  # Frontend (Vue.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: vue_frontend
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./frontend:/app
+    networks:
+      - app_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: ride-share-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: secret
+    ports:
+      - "8080:80"
+
+
+networks:
+  app_network:
+    driver: bridge
