@@ -7,6 +7,7 @@ services:
     container_name: ride-share-app
     depends_on:
       - db
+      - mailpit
     networks:
       - app_network
     restart: unless-stopped
@@ -70,8 +71,20 @@ services:
     networks:
       - app_network
 
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: ride-share-mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "1025"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 networks:
   app_network:
     driver: bridge
-
