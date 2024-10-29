@@ -9,7 +9,18 @@ class Driver extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'name',
+        'email',
+        'phone',
+        'license_number',
+        'status',
+        'vehicle_info'
+    ];
+
+    protected $casts = [
+        'vehicle_info' => 'array'
+    ];
 
     public function user()
     {
