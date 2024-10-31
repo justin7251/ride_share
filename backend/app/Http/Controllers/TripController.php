@@ -10,8 +10,18 @@ class TripController extends Controller
 {
     public function store(Request $request)
     {
+        $existingTrip = Trip::where('user_id', auth()->id())
+            ->where('is_complete', false)
+            ->first();
+
+        if ($existingTrip) {
+            return response()->json([
+                'message' => 'You already have an active trip',
+                'trip' => $existingTrip->load(['user', 'driver'])
+            ], 422);
+        }
+
         $validator = Validator::make($request->all(), [
-            'driver_id' => 'required|exists:drivers,id',
             'origin' => 'required|array',
             'destination' => 'required|array',
             'destination_name' => 'required|string'
@@ -23,7 +33,7 @@ class TripController extends Controller
 
         $trip = Trip::create([
             'user_id' => auth()->id(),
-            'driver_id' => $request->driver_id,
+            'driver_id' => $request->user()->id,
             'origin' => $request->origin,
             'destination' => $request->destination,
             'destination_name' => $request->destination_name
