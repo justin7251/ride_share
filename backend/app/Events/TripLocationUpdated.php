@@ -26,4 +26,9 @@ class TripLocationUpdated implements ShouldBroadcast
     {
         return new Channel('trip.'.$this->trip->id);
     }
+
+    public function broadcastAs()
+    {
+        return 'trip.location.updated';
+    }
 } 

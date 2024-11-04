@@ -24,4 +24,17 @@ class TripStarted implements ShouldBroadcast
     {
         return new Channel('trip.'.$this->trip->id);
     }
+
+    public function broadcastAs()
+    {
+        return 'trip.started';
+    }
+
+    public function broadcastWith()
+    {
+        return [
+            'id' => $this->trip->id,
+            'status' => $this->trip->status,
+        ];
+    }
 } 

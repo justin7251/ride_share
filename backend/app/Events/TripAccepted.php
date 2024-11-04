@@ -24,4 +24,9 @@ class TripAccepted implements ShouldBroadcast
     {
         return new Channel('trip.'.$this->trip->id);
     }
+
+    public function broadcastAs()
+    {
+        return 'trip.accepted';
+    }
 } 

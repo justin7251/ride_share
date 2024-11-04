@@ -16,3 +16,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/laravel-websockets', function () {
+    return view('vendor.websockets.dashboard');
+})->name('websockets.dashboard'); 
