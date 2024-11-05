@@ -1,17 +1,18 @@
-# Use an official Node.js image as a parent image
-FROM node:14
+# Use the official Node.js image
+FROM node:latest
 
-# Set the working directory to /app
+# Set the working directory
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
-COPY . /app
-
-# Install any needed packages
+# Copy package files and install dependencies using npm
+COPY package.json package-lock.json ./
 RUN npm install
 
-# Make port 8080 available to the world outside this container
-EXPOSE 8080
+# Copy the rest of the application code
+COPY . .
 
-# Run Vue app
-CMD ["npm", "run", "serve"]
+# Expose port 8081
+EXPOSE 8081
+
+# Start the Vite development server
+CMD ["npm", "run", "dev"]

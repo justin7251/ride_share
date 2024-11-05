@@ -1,0 +1,22 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host --port 8081",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.4.21",
+    "rollup": "^3.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "vite": "^5.2.0"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.6.1"
+  }
+}
