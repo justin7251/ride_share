@@ -1,80 +1,154 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-    <div class="max-w-md w-full">
+  <BaseLayout>
+    <div :class="styles.container">
+      <!-- Header -->
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Register</h1>
-        <p class="mt-2 text-gray-600">Create your account</p>
+        <h1 :class="styles.h1">Create Account</h1>
+        <p :class="styles.subtitle">Join Ride Share today</p>
       </div>
 
-      <div class="bg-white rounded-xl shadow-lg p-8">
+      <!-- Main Card -->
+      <div :class="styles.card">
         <form @submit.prevent="handleSubmit" class="space-y-6">
-          <div>
-            <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
-            <div class="mt-1 relative">
-              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">+60</span>
+          <!-- Phone Number -->
+          <div :class="styles.formGroup">
+            <label :class="styles.label" for="phone">Phone Number</label>
+            <div class="relative mt-1">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                <span class="text-gray-500 sm:text-sm font-medium">+60</span>
+              </div>
               <input
                 id="phone"
                 v-model="phone"
                 type="tel"
                 required
-                class="block w-full pl-12 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 placeholder="1XXXXXXXXX"
+                pattern="[0-9]*"
+                @input="validatePhone"
+                :class="[
+                  styles.phoneInput,
+                  phoneError ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : ''
+                ]"
               >
             </div>
+            <p v-if="phoneError" :class="styles.error">{{ phoneError }}</p>
           </div>
 
-          <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">Email (Optional)</label>
+          <!-- Email -->
+          <div :class="styles.formGroup">
+            <label :class="styles.label" for="email">Email (Optional)</label>
             <input
               id="email"
               v-model="email"
               type="email"
-              class="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              placeholder="Enter your email"
+              placeholder="your@email.com"
+              :class="styles.input"
             >
           </div>
 
-          <p v-if="errorMessage" class="text-sm text-red-600 text-center">{{ errorMessage }}</p>
+          <!-- Name -->
+          <div :class="styles.formGroup">
+            <label :class="styles.label" for="name">Full Name</label>
+            <input
+              id="name"
+              v-model="name"
+              type="text"
+              required
+              placeholder="Enter your full name"
+              :class="styles.input"
+            >
+          </div>
 
+          <!-- Error Message -->
+          <div class="min-h-[20px]">
+            <p v-if="errorMessage" :class="styles.error">{{ errorMessage }}</p>
+          </div>
+
+          <!-- Submit Button -->
           <button
             type="submit"
-            :disabled="isLoading"
-            class="w-full py-3 px-4 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="!isValid || isLoading"
+            :class="styles.buttonPrimary"
           >
-            {{ isLoading ? 'Creating Account...' : 'Create Account' }}
+            <template v-if="isLoading">
+              <svg :class="styles.loadingSpinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Creating Account...
+            </template>
+            <span v-else>Create Account</span>
           </button>
         </form>
 
+        <!-- Terms and Privacy -->
         <div class="mt-6 text-center">
-          <p class="text-sm text-gray-600">
-            Already have an account?
-            <router-link to="/login" class="text-green-600 hover:text-green-500 font-medium">Sign in</router-link>
+          <p :class="styles.text">
+            By creating an account, you agree to our
+            <a href="#" :class="styles.link">Terms of Service</a> and
+            <a href="#" :class="styles.link">Privacy Policy</a>
           </p>
         </div>
       </div>
+
+      <!-- Login Link -->
+      <div class="mt-6 text-center">
+        <p :class="styles.text">
+          Already have an account?
+          <RouterLink to="/login" :class="styles.link">
+            Sign in here
+          </RouterLink>
+        </p>
+      </div>
     </div>
-  </div>
+  </BaseLayout>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, inject } from 'vue'
 import { useRouter } from 'vue-router'
+import BaseLayout from '../components/BaseLayout.vue'
 import { authService } from '@/services/api'
 
 const router = useRouter()
 const phone = ref('')
 const email = ref('')
+const name = ref('')
+const phoneError = ref('')
 const errorMessage = ref('')
 const isLoading = ref(false)
 
+const styles = inject('styles')
+
+const validatePhone = () => {
+  phone.value = phone.value.replace(/\D/g, '')
+  const phoneRegex = /^1[0-9]{8,9}$/
+  
+  if (phone.value && !phoneRegex.test(phone.value)) {
+    phoneError.value = 'Please enter a valid Malaysian phone number'
+    return false
+  }
+  
+  phoneError.value = ''
+  return true
+}
+
+const isValid = computed(() => {
+  return phone.value && name.value && !phoneError.value
+})
+
 const handleSubmit = async () => {
-  if (!phone.value) return
+  if (!isValid.value) return
   
   isLoading.value = true
   errorMessage.value = ''
   
   try {
-    const response = await authService.login(phone.value, email.value)
+    const response = await authService.register({
+      phone: phone.value,
+      email: email.value,
+      name: name.value
+    })
     
     if (response.success) {
       router.push({
