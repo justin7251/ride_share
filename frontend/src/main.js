@@ -1,5 +1,13 @@
 import { createApp } from 'vue'
-import './style.css'
 import App from './App.vue'
+import router from './router'
+import { styles } from './assets/styles/shared'
+import './assets/main.css'
 
-createApp(App).mount('#app')
+const app = createApp(App)
+
+// Make styles available globally
+app.provide('styles', styles)
+
+app.use(router)
+app.mount('#app')
