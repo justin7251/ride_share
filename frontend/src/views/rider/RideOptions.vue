@@ -101,6 +101,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { rideService } from '../../services/rideService'
 
 const router = useRouter()
 const route = useRoute()
@@ -155,13 +156,15 @@ const bookRide = async () => {
   
   isLoading.value = true
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    const response = await rideService.bookRide({
+      pickup: pickup.value,
+      destination: destination.value,
+      rideType: selectedRide.value.name.toLowerCase()
+    })
+    
     router.push({
       name: 'ride-tracking',
-      params: {
-        rideId: 'RIDE123'
-      }
+      params: { rideId: response.rideId }
     })
   } catch (error) {
     console.error('Booking error:', error)

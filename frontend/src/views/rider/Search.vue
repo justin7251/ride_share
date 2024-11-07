@@ -164,8 +164,8 @@ const searchRides = async () => {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500))
     router.push({
-      name: 'ride-options',
-      params: {
+      path: '/rider/options',
+      query: {
         pickup: pickup.value,
         destination: destination.value
       }
