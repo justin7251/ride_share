@@ -7,6 +7,7 @@ use App\Http\Controllers\DriverController;
 use App\Http\Controllers\TripController;
 
 Route::post('/login', LoginController::class);
+Route::post('/login/register', [LoginController::class, 'register']);
 Route::post('/login/verify', [LoginController::class, 'verify']);
 
 Route::group(['middleware' => 'auth:sanctum'], function () {

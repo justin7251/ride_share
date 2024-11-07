@@ -11,28 +11,65 @@ class LoginController extends Controller
     public function __invoke(Request $request)
     {
         $request->validate([
-            'phone' => 'required|string|min:10',
-            'email' => 'required|email'
+            'phone' => 'required|string|min:7|max:15',
         ]);
 
-        // Find or create user
-        $user = User::firstOrCreate(
-            ['phone' => $request->phone],
-            ['email' => $request->email]
-        );
+        // Find existing user
+        $user = User::where('phone', $request->phone)->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Phone number not registered',
+                'status' => 'error'
+            ], 404);
+        }
+
+        // Generate and save verification code
+        $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $user->verification_code = $verificationCode;
+        $user->save();
 
         // Send verification code via email
-        $user->notify(new LoginVerificationNotification());
+        try {
+            $user->notify(new LoginVerificationNotification());
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to send verification code',
+                'status' => 'error'
+            ], 500);
+        }
 
         return response()->json([
-            'message' => 'Verification code sent to your email'
+            'message' => 'Verification code sent to your email',
+            'status' => 'success'
+        ]);
+    }
+
+    public function register(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required|string|min:7|max:15|unique:users,phone',
+            'email' => 'required|email|unique:users,email',
+            'name' => 'required|string|max:255'
+        ]);
+
+        // Create new user
+        $user = User::create([
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'name' => $request->name
+        ]);
+
+        return response()->json([
+            'message' => 'Registration successful.',
+            'status' => 'success'
         ]);
     }
 
     public function verify(Request $request)
     {
         $request->validate([
-            'phone' => 'required|string|min:10',
+            'phone' => 'required|string|min:7|max:15',
             'verification_code' => 'required|string|size:6'
         ]);
 
@@ -42,7 +79,8 @@ class LoginController extends Controller
 
         if (!$user) {
             return response()->json([
-                'message' => 'Invalid verification code'
+                'message' => 'Invalid verification code',
+                'status' => 'error'
             ], 422);
         }
 
@@ -56,6 +94,7 @@ class LoginController extends Controller
 
         return response()->json([
             'message' => 'Successfully verified',
+            'status' => 'success',
             'token' => $token,
             'user' => $user
         ]);
