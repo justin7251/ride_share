@@ -30,6 +30,7 @@
                   ? 'text-green-600 bg-green-50'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               ]"
+              @click="item.function ? item.function() : null"
             >
               {{ item.name }}
             </RouterLink>
@@ -89,7 +90,7 @@
                   ? 'text-green-600 bg-green-50'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               ]"
-              @click="isMobileMenuOpen = false"
+              @click="isMobileMenuOpen = false; item.function ? item.function() : null"
             >
               {{ item.name }}
             </RouterLink>
@@ -181,14 +182,30 @@
 
 <script setup>
 import { ref } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import auth from '@/stores/auth'
 
 const route = useRoute()
+const router = useRouter()
 const isMobileMenuOpen = ref(false)
 
-const navigationItems = [
-  { name: 'Home', path: '/' },
-  { name: 'Login', path: '/login' },
-  { name: 'Register', path: '/register' }
-]
+const logout = () => {
+  auth.clear()
+  router.push('/') // Redirect to the home page after logout
+}
+
+let navigationItems = []
+
+if (auth.isAuthenticated) {
+  navigationItems = [
+    { name: 'Dashboard', path: '/dashboard' },
+    { name: 'Logout', path: '/', function: logout }
+  ]
+} else {
+  navigationItems = [
+    { name: 'Home', path: '/' },
+    { name: 'Login', path: '/login' },
+    { name: 'Register', path: '/register' }
+  ]
+}
 </script> 
