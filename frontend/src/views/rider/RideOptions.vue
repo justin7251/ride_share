@@ -101,7 +101,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { rideService } from '../../services/rideService'
+import { rideService } from '@/services/rideService'
 
 const router = useRouter()
 const route = useRoute()
