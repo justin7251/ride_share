@@ -23,13 +23,13 @@
             </label>
             <div class="relative mt-1">
               <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                <span class="text-gray-500 sm:text-sm font-medium">+60</span>
+                <span class="text-gray-500 sm:text-sm font-medium">+</span>
               </div>
               <input 
                 type="tel"
                 id="phone"
                 v-model="phoneNumber"
-                placeholder="1XXXXXXXXX"
+                placeholder="Enter your phone number"
                 pattern="[0-9]*"
                 @input="validatePhoneNumber"
                 required
@@ -101,25 +101,29 @@ const isLoading = ref(false)
 
 const validatePhoneNumber = () => {
   phoneNumber.value = phoneNumber.value.replace(/\D/g, '')
-  const phoneRegex = /^1[0-9]{8,9}$/
+  const phoneRegex = /^[0-9]{7,15}$/
   isValidPhone.value = phoneRegex.test(phoneNumber.value)
   
   if (phoneNumber.value && !isValidPhone.value) {
-    errorMessage.value = 'Please enter a valid Malaysian phone number'
+    errorMessage.value = 'Please enter a valid phone number'
   } else {
     errorMessage.value = ''
   }
 }
 
 const handleSubmit = async () => {
-  if (!isValidPhone.value) return
+  if (!isValidPhone.value || isLoading.value) return // Prevent double submission
   
   isLoading.value = true
+  errorMessage.value = ''; // Clear previous error messages
   try {
-    const response = await authService.login(phoneNumber.value, 'test@example.com')
-    
-    if (response.success) {
-      localStorage.setItem('user', JSON.stringify(response.user))
+    const response = await authService.login(phoneNumber.value)
+    // Check for success status
+    if (response.status === "success") {
+      localStorage.setItem('user', JSON.stringify(response.user)); // Ensure response.user is valid
+      // Clear error message on success
+      errorMessage.value = ''; 
+      // Redirect to verify page after sending the verification code
       router.push({ 
         name: 'verify',
         params: { phone: phoneNumber.value }
@@ -128,7 +132,6 @@ const handleSubmit = async () => {
       errorMessage.value = response.message || 'Login failed. Please try again.'
     }
   } catch (error) {
-    console.error('Login error:', error)
     errorMessage.value = error.message || 'Something went wrong. Please try again.'
   } finally {
     isLoading.value = false

@@ -122,11 +122,17 @@
 </template>
 
 <script setup>
-import { inject } from 'vue'
-import { RouterLink } from 'vue-router'
+import { ref, inject } from 'vue'
+import { useRouter } from 'vue-router'
 import BaseLayout from '../components/BaseLayout.vue'
+import auth from '@/stores/auth'
 
-const styles = inject('styles')
+const router = useRouter()
+const styles = inject('styles') // Ensure styles are injected
+
+if (auth.isAuthenticated) {
+  router.push('/dashboard')
+}
 </script>
 
 <style scoped>

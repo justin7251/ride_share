@@ -15,14 +15,14 @@
             <label :class="styles.label" for="phone">Phone Number</label>
             <div class="relative mt-1">
               <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                <span class="text-gray-500 sm:text-sm font-medium">+60</span>
+                <span class="text-gray-500 sm:text-sm font-medium">+</span>
               </div>
               <input
                 id="phone"
                 v-model="phone"
                 type="tel"
                 required
-                placeholder="1XXXXXXXXX"
+                placeholder="XXXXXXXXXX"
                 pattern="[0-9]*"
                 @input="validatePhone"
                 :class="[
@@ -36,7 +36,7 @@
 
           <!-- Email -->
           <div :class="styles.formGroup">
-            <label :class="styles.label" for="email">Email (Optional)</label>
+            <label :class="styles.label" for="email">Email</label>
             <input
               id="email"
               v-model="email"
@@ -122,7 +122,7 @@ const styles = inject('styles')
 
 const validatePhone = () => {
   phone.value = phone.value.replace(/\D/g, '')
-  const phoneRegex = /^1[0-9]{8,9}$/
+  const phoneRegex = /^[0-9]{7,15}$/
   
   if (phone.value && !phoneRegex.test(phone.value)) {
     phoneError.value = 'Please enter a valid Malaysian phone number'

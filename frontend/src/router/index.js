@@ -4,28 +4,14 @@ import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import Verify from '../views/Verify.vue'
 import auth  from '../stores/auth'
+import Dashboard from '../views/Dashboard.vue'
 
 const routes = [
-  {
-    path: '/',
-    name: 'home',
-    component: Home
-  },
-  {
-    path: '/login',
-    name: 'login',
-    component: Login
-  },
-  {
-    path: '/register',
-    name: 'register',
-    component: Register
-  },
-  {
-    path: '/verify/:phone',
-    name: 'verify',
-    component: Verify
-  }
+  { path: '/', name: 'home', component: Home },
+  { path: '/login', name: 'login', component: Login },
+  { path: '/register', name: 'register', component: Register },
+  { path: '/verify/:phone', name: 'verify', component: Verify },
+  { path: '/dashboard', name: 'dashboard', component: Dashboard }
 ]
 
 const router = createRouter({

@@ -20,9 +20,20 @@ export const authService = {
 
   verify: async (phone, verification_code) => {
     try {
-      const response = await api.post('/verify', {
+      const response = await api.post('/login/verify', {
         phone,
         verification_code
+      })
+      return response.data
+    } catch (error) {
+      throw error.response?.data || error
+    }
+  },
+
+  login: async (phone) => {
+    try {
+      const response = await api.post('/login', {
+        phone
       })
       return response.data
     } catch (error) {
