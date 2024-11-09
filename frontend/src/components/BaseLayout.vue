@@ -22,7 +22,7 @@
           <div class="hidden md:flex md:items-center md:space-x-8">
             <RouterLink 
               v-for="item in navigationItems"
-              :key="item.path"
+              :key="item.name"
               :to="item.path"
               class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200"
               :class="[
@@ -34,6 +34,21 @@
             >
               {{ item.name }}
             </RouterLink>
+
+            <!-- User Icon Dropdown -->
+            <div v-if="auth.isAuthenticated" class="relative">
+              <button @click="toggleDropdown" class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zM12 14c-4.42 0-8 2.69-8 6v2h16v-2c0-3.31-3.58-6-8-6z" />
+                </svg>
+              </button>
+              <div v-if="dropdownOpen" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+                <div class="py-1">
+                  <RouterLink to="/edit-user" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit User</RouterLink>
+                  <button @click="logout" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Mobile menu button -->
@@ -188,6 +203,11 @@ import auth from '@/stores/auth'
 const route = useRoute()
 const router = useRouter()
 const isMobileMenuOpen = ref(false)
+const dropdownOpen = ref(false)
+
+const toggleDropdown = () => {
+  dropdownOpen.value = !dropdownOpen.value
+}
 
 const logout = () => {
   auth.clear()
@@ -199,7 +219,7 @@ let navigationItems = []
 if (auth.isAuthenticated) {
   navigationItems = [
     { name: 'Dashboard', path: '/dashboard' },
-    { name: 'Logout', path: '/', function: logout }
+
   ]
 } else {
   navigationItems = [
@@ -208,4 +228,8 @@ if (auth.isAuthenticated) {
     { name: 'Register', path: '/register' }
   ]
 }
-</script> 
+</script>
+
+<style scoped>
+/* Add any additional styles here */
+</style> 

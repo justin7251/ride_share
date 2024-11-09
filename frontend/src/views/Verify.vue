@@ -134,7 +134,7 @@ const handleSubmit = async () => {
       localStorage.setItem('token', response.token)
 
       // Redirect to home or dashboard
-      router.push('/')
+      router.push('/dashboard')
     } else {
       errorMessage.value = response.message || 'Invalid verification code'
     }
