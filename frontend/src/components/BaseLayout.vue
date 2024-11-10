@@ -44,7 +44,7 @@
               </button>
               <div v-if="dropdownOpen" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
                 <div class="py-1">
-                  <RouterLink to="/edit-user" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit User</RouterLink>
+                  <RouterLink to="/user/edit" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Edit User</RouterLink>
                   <button @click="logout" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</button>
                 </div>
               </div>

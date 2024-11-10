@@ -10,7 +10,7 @@ import RideOptions from '../views/rider/RideOptions.vue';
 import RideTracking from '../views/rider/RideTracking.vue';
 import DriverDashboard from '../views/driver/Dashboard.vue';
 import NotFound from '../views/NotFound.vue';
-
+import UserEdit from '../views/user/Edit.vue';
 const routes = [
   { path: '/', name: 'home', component: Home },
   { path: '/login', name: 'login', component: Login },
@@ -21,6 +21,7 @@ const routes = [
   { path: '/rider/options', name: 'ride-options', component: RideOptions },
   { path: '/rider/tracking/:rideId', name: 'ride-tracking', component: RideTracking },
   { path: '/driver/dashboard', name: 'driver-dashboard', component: DriverDashboard },
+  { path: '/user/edit', name: 'user-edit', component: UserEdit },
   { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFound }
 ]
 
