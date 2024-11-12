@@ -139,14 +139,30 @@ const toggleOnlineStatus = () => {
 }
 
 const startListeningForTrips = () => {
-  // TODO: Implement WebSocket connection for real-time trip requests
-  console.log('Started listening for trips')
-}
+  window.Echo.channel('trips')
+    .listen('TripStarted', (event) => {
+      console.log('New trip started:', event.trip);
+      // Handle new trip request
+    })
+    .listen('TripAccepted', (event) => {
+      console.log('Trip accepted:', event.trip);
+      // Handle trip acceptance
+    })
+    .listen('TripLocationUpdated', (event) => {
+      console.log('Trip location updated:', event.trip, event.location);
+      // Handle location update
+    })
+    .listen('TripCompleted', (event) => {
+      console.log('Trip completed:', event.trip);
+      // Handle trip completion
+    });
+};
 
 const stopListeningForTrips = () => {
-  // TODO: Close WebSocket connection
-  console.log('Stopped listening for trips')
-}
+  if (window.Echo) {
+    window.Echo.leaveChannel('trips');
+  }
+};
 
 // Lifecycle hooks
 onMounted(() => {
