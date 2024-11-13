@@ -196,7 +196,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import auth from '@/stores/auth'
 
@@ -204,6 +204,27 @@ const route = useRoute()
 const router = useRouter()
 const isMobileMenuOpen = ref(false)
 const dropdownOpen = ref(false)
+const navigationItems = ref([])
+
+// Function to update navigation items - Define this first
+const updateNavigationItems = () => {
+  if (auth.isAuthenticated) {
+    navigationItems.value = [
+      { name: 'Dashboard', path: '/dashboard' },
+    ]
+  } else {
+    navigationItems.value = [
+      { name: 'Home', path: '/' },
+      { name: 'Login', path: '/login' },
+      { name: 'Register', path: '/register' }
+    ]
+  }
+}
+
+// Then set up the watcher
+watch(() => auth.isAuthenticated, (newValue) => {
+  updateNavigationItems()
+}, { immediate: true })
 
 const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value
@@ -212,21 +233,6 @@ const toggleDropdown = () => {
 const logout = () => {
   auth.clear()
   router.push('/') // Redirect to the home page after logout
-}
-
-let navigationItems = []
-
-if (auth.isAuthenticated) {
-  navigationItems = [
-    { name: 'Dashboard', path: '/dashboard' },
-
-  ]
-} else {
-  navigationItems = [
-    { name: 'Home', path: '/' },
-    { name: 'Login', path: '/login' },
-    { name: 'Register', path: '/register' }
-  ]
 }
 </script>
 

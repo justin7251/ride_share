@@ -64,6 +64,7 @@ import { ref, computed, inject } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import BaseLayout from '../components/BaseLayout.vue'
 import { authService } from '@/services/api'
+import auth from '@/stores/auth'
 
 const styles = inject('styles')
 const router = useRouter()
@@ -129,11 +130,12 @@ const handleSubmit = async () => {
     const response = await authService.verify(phoneNumber.value, verificationCode)
 
     if (response.status === "success") {
-      // Store user data and token in local storage
-      localStorage.setItem('user', JSON.stringify(response.user))
-      localStorage.setItem('token', response.token)
-
-      // Redirect to home or dashboard
+      // Update auth store first
+      auth.setUser(response.user)
+      auth.setToken(response.token)
+      auth.setAuthenticated(true)
+      
+      // Then redirect
       router.push('/dashboard')
     } else {
       errorMessage.value = response.message || 'Invalid verification code'

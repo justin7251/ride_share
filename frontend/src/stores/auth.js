@@ -1,6 +1,7 @@
 import { reactive } from 'vue'
 
 const auth = reactive({
+  isAuthenticated: false,
   user: (() => {
     const user = localStorage.getItem('user');
     try {
@@ -15,23 +16,32 @@ const auth = reactive({
   setUser(userData) {
     this.user = userData
     localStorage.setItem('user', JSON.stringify(userData))
+    this.isAuthenticated = !!userData
   },
   
   setToken(token) {
     this.token = token
     localStorage.setItem('token', token)
+    this.isAuthenticated = !!token
   },
   
   clear() {
     this.user = null
     this.token = null
+    this.isAuthenticated = false
     localStorage.removeItem('user')
     localStorage.removeItem('token')
   },
   
-  get isAuthenticated() {
-    return !!this.token
+  init() {
+    this.isAuthenticated = !!(this.token && this.user)
+  },
+  
+  setAuthenticated(status) {
+    this.isAuthenticated = status
   }
 })
+
+auth.init()
 
 export default auth
