@@ -1,7 +1,7 @@
 import { reactive } from 'vue'
 
 const auth = reactive({
-  isAuthenticated: false,
+  isAuthenticated: !!localStorage.getItem('token'),
   user: (() => {
     const user = localStorage.getItem('user');
     try {
@@ -16,13 +16,13 @@ const auth = reactive({
   setUser(userData) {
     this.user = userData
     localStorage.setItem('user', JSON.stringify(userData))
-    this.isAuthenticated = !!userData
+    this.isAuthenticated = true
   },
   
   setToken(token) {
     this.token = token
     localStorage.setItem('token', token)
-    this.isAuthenticated = !!token
+    this.isAuthenticated = true
   },
   
   clear() {
@@ -34,7 +34,9 @@ const auth = reactive({
   },
   
   init() {
-    this.isAuthenticated = !!(this.token && this.user)
+    const hasToken = !!localStorage.getItem('token')
+    const hasUser = !!localStorage.getItem('user')
+    this.isAuthenticated = hasToken && hasUser
   },
   
   setAuthenticated(status) {

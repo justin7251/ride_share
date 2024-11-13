@@ -196,7 +196,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import auth from '@/stores/auth'
 
@@ -208,23 +208,30 @@ const navigationItems = ref([])
 
 // Function to update navigation items - Define this first
 const updateNavigationItems = () => {
-  if (auth.isAuthenticated) {
-    navigationItems.value = [
-      { name: 'Dashboard', path: '/dashboard' },
-    ]
-  } else {
-    navigationItems.value = [
-      { name: 'Home', path: '/' },
-      { name: 'Login', path: '/login' },
-      { name: 'Register', path: '/register' }
-    ]
-  }
+  console.log('Updating navigation, auth status:', auth.isAuthenticated) // Debug log
+  navigationItems.value = auth.isAuthenticated 
+    ? [{ name: 'Dashboard', path: '/dashboard' }]
+    : [
+        { name: 'Home', path: '/' },
+        { name: 'Login', path: '/login' },
+        { name: 'Register', path: '/register' }
+      ]
 }
 
-// Then set up the watcher
-watch(() => auth.isAuthenticated, (newValue) => {
+// Watch both auth.isAuthenticated and route changes
+watch(
+  [() => auth.isAuthenticated, () => route.path],
+  ([newAuthState, newPath]) => {
+    console.log('Auth state or route changed:', newAuthState) // Debug log
+    updateNavigationItems()
+  },
+  { immediate: true, deep: true }
+)
+
+// Also update on component mount
+onMounted(() => {
   updateNavigationItems()
-}, { immediate: true })
+})
 
 const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value

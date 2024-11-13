@@ -25,4 +25,8 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/users', function(Request $request) {
         return $request->user();
     });
+
+    Route::get('/user/driver', [DriverController::class, 'getUserWithDriver']);
+    Route::put('/user/driver', [DriverController::class, 'updateUserWithDriver']);
+    Route::get('/user/edit', [UserController::class, 'edit']);
 });
