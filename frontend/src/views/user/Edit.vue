@@ -21,14 +21,14 @@
           </div>
 
           <div class="mb-4">
-            <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
+            <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
             <input
               type="text"
               id="phone"
               v-model="user.phone"
-              class="mt-1 block w-full pl-3 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              readonly
-            />
+              disabled
+              class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm text-gray-500 cursor-not-allowed"
+            >
           </div>
 
           <div class="mb-4">
