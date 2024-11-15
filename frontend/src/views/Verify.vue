@@ -31,7 +31,7 @@
         </div>
 
         <!-- Error Message -->
-        <p v-if="errorMessage" :class="[styles.error, 'text-center mb-4']">
+        <p v-if="errorMessage" :class="[errorMessageClass, 'text-center mb-4']">
           {{ errorMessage }}
         </p>
 
@@ -63,7 +63,7 @@
 import { ref, computed, inject } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import BaseLayout from '../components/BaseLayout.vue'
-import { authService } from '@/services/api'
+import { authService } from '@/services/authService'
 import auth from '@/stores/auth'
 
 const styles = inject('styles')
@@ -79,6 +79,10 @@ let resendInterval = null
 
 const isValidOtp = computed(() => {
   return otpDigits.value.every(digit => digit !== '')
+})
+
+const errorMessageClass = computed(() => {
+  return errorMessage.value.includes('successfully') ? 'text-green-500' : 'text-red-500'
 })
 
 const handleOtpInput = (event, index) => {

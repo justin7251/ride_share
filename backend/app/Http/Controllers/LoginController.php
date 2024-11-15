@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Notifications\LoginVerificationNotification;
 use Illuminate\Http\Request;
+use App\Models\Driver;
+use Illuminate\Support\Facades\DB;
 
 class LoginController extends Controller
 {
@@ -24,20 +26,7 @@ class LoginController extends Controller
             ], 404);
         }
 
-        // Generate and save verification code
-        $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        $user->verification_code = $verificationCode;
-        $user->save();
-
-        // Send verification code via email
-        try {
-            $user->notify(new LoginVerificationNotification());
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Failed to send verification code',
-                'status' => 'error'
-            ], 500);
-        }
+        $this->sendVerificationCode($user);
 
         return response()->json([
             'message' => 'Verification code sent to your email',
@@ -53,17 +42,33 @@ class LoginController extends Controller
             'name' => 'required|string|max:255'
         ]);
 
-        // Create new user
-        $user = User::create([
-            'phone' => $request->phone,
-            'email' => $request->email,
-            'name' => $request->name
-        ]);
+        try {
+            DB::transaction(function () use ($request) {
+                $user = User::create([
+                    'phone' => $request->phone,
+                    'email' => $request->email,
+                    'name' => $request->name
+                ]);
+    
+                Driver::create([
+                    'user_id' => $user->id,
+                    'name' => $request->name,
+                    'status' => 'inactive'
+                ]);
 
-        return response()->json([
-            'message' => 'Registration successful.',
-            'status' => 'success'
-        ]);
+                $this->sendVerificationCode($user);
+            });
+    
+            return response()->json([
+                'message' => 'Registration successful.',
+                'status' => 'success'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'status' => 'error'
+            ], 500);
+        }
     }
 
     public function verify(Request $request)
@@ -99,4 +104,20 @@ class LoginController extends Controller
             'user' => $user
         ]);
     }
+
+    private function sendVerificationCode(User $user)
+{
+    $verificationCode = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    $user->verification_code = $verificationCode;
+    $user->save();
+
+    // Send notification with error handling
+    try {
+        $user->notify(new LoginVerificationNotification());
+    } catch (\Exception $e) {
+        // Log the error or handle it as needed
+        // You can also return a response or throw a custom exception
+        throw new \Exception('Failed to send verification code: ' . $e->getMessage());
+    }
+}
 }

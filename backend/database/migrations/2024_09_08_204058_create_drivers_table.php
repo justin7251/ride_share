@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('name');
-            $table->string('license_number')->unique();
+            $table->string('license_number')->unique()->nullable();
             $table->enum('status', ['active', 'inactive'])->default('inactive');
             $table->json('vehicle_info')->nullable(); 
             $table->timestamps();

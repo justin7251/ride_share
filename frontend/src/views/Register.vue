@@ -59,9 +59,10 @@
             >
           </div>
 
-          <!-- Error Message -->
+          <!-- Success/Error Message -->
           <div class="min-h-[20px]">
-            <p v-if="errorMessage" :class="styles.error">{{ errorMessage }}</p>
+            <p v-if="successMessage" class="text-green-500">{{ successMessage }}</p>
+            <p v-if="errorMessage" class="text-red-500">{{ errorMessage }}</p>
           </div>
 
           <!-- Submit Button -->
@@ -108,7 +109,7 @@
 import { ref, computed, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseLayout from '../components/BaseLayout.vue'
-import { authService } from '@/services/api'
+import { authService } from '@/services/authService'
 
 const router = useRouter()
 const phone = ref('')
@@ -116,6 +117,7 @@ const email = ref('')
 const name = ref('')
 const phoneError = ref('')
 const errorMessage = ref('')
+const successMessage = ref('')
 const isLoading = ref(false)
 
 const styles = inject('styles')
@@ -142,6 +144,7 @@ const handleSubmit = async () => {
   
   isLoading.value = true
   errorMessage.value = ''
+  successMessage.value = ''
   
   try {
     const response = await authService.register({
@@ -150,7 +153,8 @@ const handleSubmit = async () => {
       name: name.value
     })
     
-    if (response.success) {
+    if (response.status === 'success') {
+      successMessage.value = 'Registration successful! Please check your email for verification.'
       router.push({
         name: 'verify',
         params: { phone: phone.value }

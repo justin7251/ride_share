@@ -56,28 +56,6 @@ class DriverController extends Controller
         return response()->json($driver->load('user'));
     }
 
-    public function update(Request $request, Driver $driver)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'string|max:255',
-            'license_number' => 'string|unique:drivers,license_number,' . $driver->id,
-            'status' => 'in:active,inactive',
-            'vehicle_info' => 'array',
-            'vehicle_info.year' => 'integer|min:1900|max:' . (date('Y') + 1),
-            'vehicle_info.make' => 'string',
-            'vehicle_info.model' => 'string',
-            'vehicle_info.color' => 'string',
-            'vehicle_info.plate_number' => 'string'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $driver->update($request->all());
-        return response()->json($driver);
-    }
-
     public function destroy(Driver $driver)
     {
         $driver->delete();

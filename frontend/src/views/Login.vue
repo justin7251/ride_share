@@ -90,7 +90,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import BaseLayout from '../components/BaseLayout.vue'
-import { authService } from '@/services/api'
+import { authService } from '@/services/authService'
 import { styles } from '@/assets/styles/shared'
 
 const router = useRouter()

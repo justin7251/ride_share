@@ -13,7 +13,6 @@ Route::post('/login/verify', [LoginController::class, 'verify']);
 Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/drivers', [DriverController::class, 'show']);
     Route::post('/drivers', [DriverController::class, 'store']);
-    Route::put('/drivers/{driver}', [DriverController::class, 'update']);
 
     Route::post('/trip', [TripController::class, 'store']);
     Route::get('/trip/{trip}', [TripController::class, 'show']);

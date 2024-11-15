@@ -1,50 +1,34 @@
 import api from './api'
-
 export const authService = {
-  async login(credentials) {
+  register: async (userData) => {
     try {
-      const response = await api.post('/auth/login', credentials)
+      const response = await api.post('/login/register', userData)
       return response.data
     } catch (error) {
-      throw error
+      throw error.response?.data || error
     }
   },
 
-  async register(userData) {
+  verify: async (phone, verification_code) => {
     try {
-      const response = await api.post('/auth/register', userData)
+      const response = await api.post('/login/verify', {
+        phone,
+        verification_code
+      })
       return response.data
     } catch (error) {
-      throw error
+      throw error.response?.data || error
     }
   },
 
-  async verifyEmail(token) {
+  login: async (phone) => {
     try {
-      const response = await api.post('/auth/verify-email', { token })
+      const response = await api.post('/login', {
+        phone
+      })
       return response.data
     } catch (error) {
-      throw error
-    }
-  },
-
-  async resendVerification(email) {
-    try {
-      const response = await api.post('/auth/resend-verification', { email })
-      return response.data
-    } catch (error) {
-      throw error
-    }
-  },
-
-  async getProfile() {
-    try {
-      const response = await api.get('/auth/profile')
-      return response.data
-    } catch (error) {
-      throw error
+      throw error.response?.data || error
     }
   }
 }
-
-export default authService
