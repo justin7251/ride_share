@@ -38,9 +38,18 @@
             <!-- User Icon Dropdown -->
             <div v-if="auth.isAuthenticated" class="relative">
               <button @click="toggleDropdown" class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zM12 14c-4.42 0-8 2.69-8 6v2h16v-2c0-3.31-3.58-6-8-6z" />
-                </svg>
+                <img 
+                  v-if="auth.user.avatar" 
+                  :src="auth.user.avatar" 
+                  alt="User Avatar" 
+                  class="h-10 w-10 rounded-full bg-gray-200" 
+                />
+                <img 
+                  v-else 
+                  src="@/assets/default-avatar.jpg" 
+                  alt="Default Avatar" 
+                  class="h-10 w-10 rounded-full bg-gray-200" 
+                />
               </button>
               <div v-if="dropdownOpen" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
                 <div class="py-1">
