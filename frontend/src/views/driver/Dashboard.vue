@@ -94,11 +94,13 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { driverService } from '@/services/driverService'
 
 const router = useRouter()
+const isOnline = ref(false)
+const initialStatusLoaded = ref(false)
 
 // State
-const isOnline = ref(false)
 const todayStats = ref({
   earnings: '0.00',
   trips: 0
@@ -129,12 +131,21 @@ const goBack = () => {
 }
 
 // Methods
-const toggleOnlineStatus = () => {
-  isOnline.value = !isOnline.value
-  if (isOnline.value) {
-    startListeningForTrips()
-  } else {
-    stopListeningForTrips()
+const toggleOnlineStatus = async () => {
+  try {
+    const newStatus = !isOnline.value
+    const response = await driverService.updateStatus(newStatus ? 'active' : 'inactive')
+    
+    if (response.status === 'success') {
+      isOnline.value = newStatus
+      if (isOnline.value && window.Echo) {
+        startListeningForTrips()
+      } else {
+        stopListeningForTrips()
+      }
+    }
+  } catch (error) {
+    console.error('Failed to update status:', error)
   }
 }
 
@@ -164,10 +175,18 @@ const stopListeningForTrips = () => {
   }
 };
 
-// Lifecycle hooks
-onMounted(() => {
-  // TODO: Fetch initial stats and trips
-  console.log('Driver dashboard mounted')
+// Only fetch status once when component mounts
+onMounted(async () => {
+  if (!initialStatusLoaded.value) {
+    console.log('Fetching driver status');
+    try {
+      const response = await driverService.getStatus()
+      isOnline.value = response.driver_status === 'active'
+      initialStatusLoaded.value = true
+    } catch (error) {
+      console.error('Failed to fetch driver status:', error)
+    }
+  }
 })
 
 onUnmounted(() => {

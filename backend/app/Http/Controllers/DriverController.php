@@ -131,4 +131,46 @@ class DriverController extends Controller
             ], 500);
         }
     }
+
+    public function updateStatus(Request $request)
+    {
+        $request->validate([
+            'status' => 'required|in:active,inactive'
+        ]);
+
+        try {
+            $driver = auth()->user()->driver;
+            $driver->status = $request->status;
+            $driver->save();
+
+            return response()->json([
+                'message' => 'Driver status updated successfully',
+                'status' => 'success',
+                'driver_status' => $driver->status
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to update driver status',
+                'status' => 'error'
+            ], 500);
+        }
+    }
+
+    public function getStatus()
+    {
+        try {
+            $driver = auth()->user()->driver;
+            
+            return response()->json([
+                'message' => 'Driver status retrieved successfully',
+                'status' => 'success',
+                'driver_status' => $driver->status
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to get driver status',
+                'status' => 'error'
+            ], 500);
+        }
+    }
 } 
