@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\TripController;
+use App\Http\Controllers\RideController;
 
 Route::post('/login', LoginController::class);
 Route::post('/login/register', [LoginController::class, 'register']);
@@ -31,4 +32,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
 
     Route::post('/driver/status', [DriverController::class, 'updateStatus']);
     Route::get('/driver/status', [DriverController::class, 'getStatus']);
+
+    Route::post('/rides/search-drivers', [RideController::class, 'searchDrivers']);
 });
