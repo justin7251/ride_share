@@ -25,7 +25,7 @@
             @input="handleOtpInput($event, index)"
             @keydown="handleKeydown($event, index)"
             @paste="handlePaste($event, index)"
-            class="w-12 h-12 text-center text-xl font-semibold border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            class="w-12 h-12 text-center text-xl font-semibold border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
             ref="otpInputs"
           >
         </div>
