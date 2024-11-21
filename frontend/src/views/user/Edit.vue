@@ -27,7 +27,7 @@
               id="phone"
               v-model="user.phone"
               disabled
-              class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm text-gray-500 cursor-not-allowed"
+              class="mt-1 block w-full px-3 py-2 bg-gray-100 border rounded-md shadow-sm text-gray-500 cursor-not-allowed"
             >
           </div>
 
