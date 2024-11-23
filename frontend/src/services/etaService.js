@@ -1,42 +1,73 @@
+import { ref } from 'vue'
+
+const driverStatus = ref('Finding your driver...')
+const driverLocation = ref(null)
+
 export const etaService = {
-  async calculateETA(routeData) {
-    const { origin, destination, waypoints, trafficConditions } = routeData
-    
+  async startTracking(rideId) {
     try {
-      const response = await fetch('/api/routes/eta', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          origin,
-          destination,
-          waypoints,
-          trafficConditions
-        })
+      const response = await fetch(`/api/rides/${rideId}/track`, {
+        method: 'POST'
       })
       
-      return response.json()
+      if (!response.ok) {
+        throw new Error('Failed to start tracking')
+      }
+      
+      const data = await response.json()
+      
+      // Initialize tracking data
+      driverStatus.value = data.status || 'Driver assigned'
+      driverLocation.value = data.location
+      
+      return {
+        eta: data.eta,
+        distance: data.distance,
+        driver: data.driver
+      }
     } catch (error) {
-      console.error('ETA calculation failed:', error)
-      throw new Error('Failed to calculate ETA')
+      console.error('Failed to start tracking:', error)
+      if (process.env.NODE_ENV === 'development') {
+        return this.getSimulatedData()
+      }
+      throw error
     }
   },
 
-  async subscribeToUpdates(rideId, callback) {
-    // WebSocket connection for real-time updates
-    const ws = new WebSocket(`ws://your-api-url/rides/${rideId}/eta-updates`)
-    
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data)
-      callback(data)
+  async stopTracking(rideId) {
+    try {
+      await fetch(`/api/rides/${rideId}/track`, {
+        method: 'DELETE'
+      })
+    } catch (error) {
+      console.error('Failed to stop tracking:', error)
     }
-
-    return () => ws.close() // Return cleanup function
   },
 
-  getTrafficConditions(location) {
-    return fetch(`/api/traffic/${location.lat}/${location.lng}`)
-      .then(response => response.json())
+  getDriverStatus() {
+    return driverStatus
+  },
+
+  getDriverLocation() {
+    return driverLocation
+  },
+
+  getSimulatedData() {
+    return {
+      eta: new Date(Date.now() + 15 * 60000),
+      distance: 3.5,
+      driver: {
+        id: 'demo-driver',
+        name: 'John Driver',
+        photo: '/default-avatar.png',
+        rating: 4.8,
+        totalRides: 1250,
+        vehicle: {
+          model: 'Toyota Camry',
+          color: 'Silver',
+          plate: 'ABC 123'
+        }
+      }
+    }
   }
 } 

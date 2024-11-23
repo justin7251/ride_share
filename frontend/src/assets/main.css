@@ -16,6 +16,11 @@
   .input-focus {
     @apply focus:ring-2 focus:ring-green-500 focus:border-green-500;
   }
+
+  input:focus-visible::after,
+  input:focus-visible::before {
+    border-color: transparent !important;
+  }
   
   .button-base {
     @apply inline-flex items-center justify-center px-4 py-2 border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200;
