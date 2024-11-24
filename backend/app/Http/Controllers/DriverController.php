@@ -73,16 +73,30 @@ class DriverController extends Controller
                 'phone' => $user->phone,
                 'email' => $user->email,
                 'license_number' => null,
-                'vehicle' => null
+                'vehicle' => null,
+                'location' => null
             ]);
         }
+
+        // Retrieve vehicle information
+        $vehicle = $driver->vehicle; // Assuming you have a relationship set up in the Driver model
+
+        // Retrieve the latest location
+        $latestLocation = DB::table('driver_locations')
+            ->where('driver_id', $driver->id)
+            ->orderBy('updated_at', 'desc')
+            ->first();
 
         return response()->json([
             'name' => $user->name,
             'phone' => $user->phone,
             'email' => $user->email,
             'license_number' => $driver->license_number,
-            'vehicle' => $driver->vehicle_info
+            'vehicle' => $vehicle,
+            'location' => $latestLocation ? [
+                'lat' => $latestLocation->location->getLat(),
+                'lng' => $latestLocation->location->getLng()
+            ] : null
         ]);
     }
 
@@ -96,6 +110,8 @@ class DriverController extends Controller
             'vehicle.make' => 'required|string',
             'vehicle.model' => 'required|string',
             'vehicle.year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+            'vehicle.color' => 'required|string',
+            'vehicle.plate_number' => 'required|string'
         ]);
 
         if ($validator->fails()) {
@@ -114,9 +130,21 @@ class DriverController extends Controller
                 // Update or create driver
                 $driver = $user->driver ?? new Driver();
                 $driver->user_id = $user->id;
-                $driver->name = $request->name;
                 $driver->license_number = $request->license_number;
-                $driver->vehicle_info = $request->vehicle;
+                $driver->status = 'active'; // Set status to active when updating
+                $driver->save();
+
+                // Update vehicle information
+                $vehicleData = [
+                    'make' => $request->vehicle['make'],
+                    'model' => $request->vehicle['model'],
+                    'year' => $request->vehicle['year'],
+                    'color' => $request->vehicle['color'],
+                    'plate_number' => $request->vehicle['plate_number'],
+                ];
+
+                // Assuming you have a relationship set up for vehicle
+                $driver->vehicle_info = $vehicleData;
                 $driver->save();
             });
 
