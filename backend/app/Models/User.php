@@ -37,9 +37,9 @@ class User extends Authenticatable
         return $this->phone;
     }
 
-    public function trips()
+    public function rides()
     {
-        return $this->hasMany(Trip::class);
+        return $this->hasMany(Ride::class);
     }
 
     public function driver()

@@ -20,8 +20,8 @@ class Driver extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function trips()
+    public function rides()
     {
-        return $this->hasMany(Trip::class);
+        return $this->hasMany(Ride::class);
     }
 }

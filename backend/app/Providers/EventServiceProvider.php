@@ -6,10 +6,10 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
-use App\Events\TripStarted;
-use App\Events\TripCompleted;
-use App\Events\TripLocationUpdated;
-use App\Events\TripAccepted;
+use App\Events\RideStarted;
+use App\Events\RideCompleted;
+use App\Events\RideLocationUpdated;
+use App\Events\RideAccepted;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -22,16 +22,16 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
-        TripStarted::class => [
+        RideStarted::class => [
             // Add listeners here if needed
         ],
-        TripCompleted::class => [
+        RideCompleted::class => [
             // Add listeners here if needed
         ],
-        TripLocationUpdated::class => [
+        RideLocationUpdated::class => [
             // Add listeners here if needed
         ],
-        TripAccepted::class => [
+        RideAccepted::class => [
             // Add listeners here if needed
         ],
     ];

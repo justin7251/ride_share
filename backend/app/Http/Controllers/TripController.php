@@ -2,26 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Trip;
+use App\Models\Ride;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Events\TripStarted;
-use App\Events\TripCompleted;
-use App\Events\TripLocationUpdated;
-use App\Events\TripAccepted;
+use App\Events\RideStarted;
+use App\Events\RideCompleted;
+use App\Events\RideLocationUpdated;
+use App\Events\RideAccepted;
 
-class TripController extends Controller
+class RideController extends Controller
 {
     public function store(Request $request)
     {
-        $existingTrip = Trip::where('user_id', auth()->id())
+        $existingride = ride::where('user_id', auth()->id())
             ->where('is_complete', false)
             ->first();
 
-        if ($existingTrip) {
+        if ($existingride) {
             return response()->json([
-                'message' => 'You already have an active trip',
-                'trip' => $existingTrip->load(['user', 'driver'])
+                'message' => 'You already have an active ride',
+                'ride' => $existingride->load(['user', 'driver'])
             ], 422);
         }
 
@@ -35,7 +35,7 @@ class TripController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $trip = Trip::create([
+        $ride = ride::create([
             'user_id' => auth()->id(),
             'driver_id' => $request->user()->id,
             'origin' => $request->origin,
@@ -43,23 +43,23 @@ class TripController extends Controller
             'destination_name' => $request->destination_name
         ]);
 
-        return response()->json($trip->load(['user', 'driver']), 201);
+        return response()->json($ride->load(['user', 'driver']), 201);
     }
 
-    public function show(Request $request, Trip $trip)
+    public function show(Request $request, ride $ride)
     {
-        // is the trip assoicate to the user?
-        if ($trip->user_id !== $request->user()->id) {
+        // is the ride assoicate to the user?
+        if ($ride->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-        if ($trip->is_complete) {
-            return response()->json(['message' => 'Trip is complete'], 403);
+        if ($ride->is_complete) {
+            return response()->json(['message' => 'ride is complete'], 403);
         }
 
-        return $trip;
+        return $ride;
     }
 
-    public function update(Request $request, Trip $trip)
+    public function update(Request $request, ride $ride)
     {
         $validator = Validator::make($request->all(), [
             'is_started' => 'boolean',
@@ -73,67 +73,67 @@ class TripController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $trip->update($request->all());
-        return response()->json($trip->load(['user', 'driver']));
+        $ride->update($request->all());
+        return response()->json($ride->load(['user', 'driver']));
     }
 
-    public function accept(Request $request, Trip $trip)
+    public function accept(Request $request, ride $ride)
     {
         if (!$request->user()->driver) {
             return response()->json(['message' => 'User is not a driver'], 403);
         }
 
-        if ($trip->driver_id) {
-            return response()->json(['message' => 'Trip already accepted'], 403);
+        if ($ride->driver_id) {
+            return response()->json(['message' => 'ride already accepted'], 403);
         }
 
-        $trip->update(['driver_id' => $request->user()->id]);
+        $ride->update(['driver_id' => $request->user()->id]);
         
         // Dispatch the event
-        event(new TripAccepted($trip));
+        event(new rideAccepted($ride));
         
-        return response()->json($trip->load(['user', 'driver']));
+        return response()->json($ride->load(['user', 'driver']));
     }
 
-    public function start(Request $request, Trip $trip)
+    public function start(Request $request, ride $ride)
     {
-        if ($trip->driver_id !== $request->user()->id) {
+        if ($ride->driver_id !== $request->user()->id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        if (!$trip->driver_id) {
-            return response()->json(['message' => 'Trip not accepted'], 403);
+        if (!$ride->driver_id) {
+            return response()->json(['message' => 'ride not accepted'], 403);
         }
 
-        $trip->update(['is_started' => true]);
+        $ride->update(['is_started' => true]);
         
         // Dispatch the event
-        event(new TripStarted($trip));
+        event(new rideStarted($ride));
         
-        return response()->json($trip->load(['user', 'driver']));
+        return response()->json($ride->load(['user', 'driver']));
     }
 
-    public function complete(Request $request, Trip $trip)
+    public function complete(Request $request, ride $ride)
     {
-        if ($trip->driver_id !== $request->user()->id) {
+        if ($ride->driver_id !== $request->user()->id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        if (!$trip->is_started) {
-            return response()->json(['message' => 'Trip not started'], 403);
+        if (!$ride->is_started) {
+            return response()->json(['message' => 'ride not started'], 403);
         }
 
-        $trip->update(['is_complete' => true]);
+        $ride->update(['is_complete' => true]);
         
         // Dispatch the event
-        event(new TripCompleted($trip));
+        event(new rideCompleted($ride));
         
-        return response()->json($trip->load(['user', 'driver']));
+        return response()->json($ride->load(['user', 'driver']));
     }
 
-    public function updateDriverLocation(Request $request, Trip $trip)
+    public function updateDriverLocation(Request $request, ride $ride)
     {
-        if ($trip->driver_id !== $request->user()->id) {
+        if ($ride->driver_id !== $request->user()->id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -147,11 +147,11 @@ class TripController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $trip->update(['driver_location' => $request->driver_location]);
+        $ride->update(['driver_location' => $request->driver_location]);
         
         // Dispatch the event
-        event(new TripLocationUpdated($trip, $request->driver_location));
+        event(new rideLocationUpdated($ride, $request->driver_location));
         
-        return response()->json($trip);
+        return response()->json($ride);
     }
 }

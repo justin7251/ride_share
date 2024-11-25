@@ -23,6 +23,18 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (Schema::hasTable('driver_locations')) {
+            Schema::table('driver_locations', function (Blueprint $table) {
+                if (DB::table('information_schema.KEY_COLUMN_USAGE')
+                    ->where('TABLE_NAME', 'driver_locations')
+                    ->where('CONSTRAINT_NAME', 'driver_locations_driver_id_foreign')
+                    ->exists()
+                ) {
+                    $table->dropForeign(['driver_id']);
+                }
+            });
+        }
+
         Schema::dropIfExists('drivers');
     }
 };

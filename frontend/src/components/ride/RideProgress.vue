@@ -1,5 +1,5 @@
 <template>
-  <div v-if="tripDetails?.id" class="bg-white rounded-lg shadow-md p-4">
+  <div v-if="rideDetails?.id" class="bg-white rounded-lg shadow-md p-4">
     <div class="space-y-4">
       <!-- Pickup -->
       <div class="flex items-center">
@@ -10,7 +10,7 @@
         </div>
         <div class="ml-4">
           <p class="text-sm text-gray-600">Pickup</p>
-          <p class="font-medium text-gray-900">{{ tripDetails?.pickup || 'Loading...' }}</p>
+          <p class="font-medium text-gray-900">{{ rideDetails?.pickup || 'Loading...' }}</p>
         </div>
       </div>
 
@@ -26,7 +26,7 @@
         </div>
         <div class="ml-4">
           <p class="text-sm text-gray-600">Destination</p>
-          <p class="font-medium text-gray-900">{{ tripDetails?.destination || 'Loading...' }}</p>
+          <p class="font-medium text-gray-900">{{ rideDetails?.destination || 'Loading...' }}</p>
         </div>
       </div>
     </div>
@@ -36,11 +36,11 @@
       <div class="flex justify-between items-center">
         <div>
           <p class="text-sm text-gray-600">Estimated Time</p>
-          <p class="font-medium text-gray-900">{{ tripDetails?.eta || '0' }} min</p>
+          <p class="font-medium text-gray-900">{{ rideDetails?.eta || '0' }} min</p>
         </div>
         <div>
           <p class="text-sm text-gray-600">Distance</p>
-          <p class="font-medium text-gray-900">{{ tripDetails?.distance || '0' }} km</p>
+          <p class="font-medium text-gray-900">{{ rideDetails?.distance || '0' }} km</p>
         </div>
       </div>
     </div>
@@ -56,7 +56,7 @@
 
 <script setup>
 defineProps({
-  tripDetails: {
+  rideDetails: {
     type: Object,
     default: () => ({
       id: null,

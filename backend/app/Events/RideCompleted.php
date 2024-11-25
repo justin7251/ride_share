@@ -2,33 +2,31 @@
 
 namespace App\Events;
 
-use App\Models\Trip;
+use App\Models\Ride;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class TripLocationUpdated implements ShouldBroadcast
+class RideCompleted implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $trip;
-    public $location;
+    public $ride;
 
-    public function __construct(Trip $trip, $location)
+    public function __construct(ride $ride)
     {
-        $this->trip = $trip;
-        $this->location = $location;
+        $this->ride = $ride;
     }
 
     public function broadcastOn()
     {
-        return new Channel('trip.'.$this->trip->id);
+        return new Channel('ride.'.$this->ride->id);
     }
 
     public function broadcastAs()
     {
-        return 'trip.location.updated';
+        return 'ride.completed';
     }
 } 

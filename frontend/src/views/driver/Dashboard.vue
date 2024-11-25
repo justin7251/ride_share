@@ -49,18 +49,18 @@
           <p class="text-2xl font-semibold text-gray-900">${{ todayStats.earnings }}</p>
         </div>
         <div class="bg-white rounded-lg shadow-md p-4">
-          <p class="text-sm text-gray-600">Completed Trips</p>
-          <p class="text-2xl font-semibold text-gray-900">{{ todayStats.trips }}</p>
+          <p class="text-sm text-gray-600">Completed rides</p>
+          <p class="text-2xl font-semibold text-gray-900">{{ todayStats.rides }}</p>
         </div>
       </div>
 
-      <!-- Recent Trips -->
+      <!-- Recent rides -->
       <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Recent Trips</h2>
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Recent Rides</h2>
         
-        <div v-if="recentTrips.length > 0" class="space-y-4">
+        <div v-if="recentrides.length > 0" class="space-y-4">
           <div 
-            v-for="trip in recentTrips" 
+            v-for="trip in recentrides" 
             :key="trip.id"
             class="border-b last:border-b-0 pb-4 last:pb-0"
           >
@@ -84,7 +84,7 @@
           v-else 
           class="text-center py-8 text-gray-600"
         >
-          No trips yet today
+          No rides yet today
         </div>
       </div>
     </div>
@@ -103,10 +103,10 @@ const initialStatusLoaded = ref(false)
 // State
 const todayStats = ref({
   earnings: '0.00',
-  trips: 0
+  rides: 0
 })
 
-const recentTrips = ref([
+const recentrides = ref([
   {
     id: 1,
     destination: 'Central Mall',
@@ -139,9 +139,9 @@ const toggleOnlineStatus = async () => {
     if (response.status === 'success') {
       isOnline.value = newStatus
       if (isOnline.value && window.Echo) {
-        startListeningForTrips()
+        startListeningForrides()
       } else {
-        stopListeningForTrips()
+        stopListeningForrides()
       }
     }
   } catch (error) {
@@ -149,9 +149,9 @@ const toggleOnlineStatus = async () => {
   }
 }
 
-const startListeningForTrips = () => {
-  window.Echo.channel('trips')
-    .listen('TripStarted', (event) => {
+const startListeningForrides = () => {
+  window.Echo.channel('rides')
+    .listen('ridestarted', (event) => {
       console.log('New trip started:', event.trip);
       // Handle new trip request
     })
@@ -169,9 +169,9 @@ const startListeningForTrips = () => {
     });
 };
 
-const stopListeningForTrips = () => {
+const stopListeningForrides = () => {
   if (window.Echo) {
-    window.Echo.leaveChannel('trips');
+    window.Echo.leaveChannel('rides');
   }
 };
 
@@ -190,6 +190,6 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  stopListeningForTrips()
+  stopListeningForrides()
 })
 </script> 
