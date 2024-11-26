@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\DriverController;
-use App\Http\Controllers\TripController;
+use App\Http\Controllers\rideController;
 use App\Http\Controllers\RideController;
 
 Route::post('/login', LoginController::class);
@@ -15,12 +15,12 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/drivers', [DriverController::class, 'show']);
     Route::post('/drivers', [DriverController::class, 'store']);
 
-    Route::post('/trip', [TripController::class, 'store']);
-    Route::get('/trip/{trip}', [TripController::class, 'show']);
-    Route::put('/trip/{trip}/accept', [TripController::class, 'accept']);
-    Route::put('/trip/{trip}/start', [TripController::class, 'start']);
-    Route::put('/trip/{trip}/complete', [TripController::class, 'complete']);
-    Route::put('/trip/{trip}/driver-location', [TripController::class, 'updateDriverLocation']);
+    Route::post('/ride', [rideController::class, 'store']);
+    Route::get('/ride/{ride}', [rideController::class, 'show']);
+    Route::put('/ride/{ride}/accept', [rideController::class, 'accept']);
+    Route::put('/ride/{ride}/start', [rideController::class, 'start']);
+    Route::put('/ride/{ride}/complete', [rideController::class, 'complete']);
+    Route::put('/ride/{ride}/driver-location', [rideController::class, 'updateDriverLocation']);
 
     Route::get('/users', function(Request $request) {
         return $request->user();

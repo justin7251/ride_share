@@ -60,22 +60,22 @@
         
         <div v-if="recentrides.length > 0" class="space-y-4">
           <div 
-            v-for="trip in recentrides" 
-            :key="trip.id"
+            v-for="ride in recentrides" 
+            :key="ride.id"
             class="border-b last:border-b-0 pb-4 last:pb-0"
           >
             <div class="flex justify-between items-start mb-2">
               <div>
-                <p class="font-medium text-gray-900">{{ trip.destination }}</p>
-                <p class="text-sm text-gray-600">{{ trip.date }}</p>
+                <p class="font-medium text-gray-900">{{ ride.destination }}</p>
+                <p class="text-sm text-gray-600">{{ ride.date }}</p>
               </div>
-              <p class="font-medium text-green-600">${{ trip.earnings }}</p>
+              <p class="font-medium text-green-600">${{ ride.earnings }}</p>
             </div>
             <div class="flex items-center text-sm text-gray-600">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              {{ trip.duration }} • {{ trip.distance }}
+              {{ ride.duration }} • {{ ride.distance }}
             </div>
           </div>
         </div>
@@ -152,20 +152,20 @@ const toggleOnlineStatus = async () => {
 const startListeningForrides = () => {
   window.Echo.channel('rides')
     .listen('ridestarted', (event) => {
-      console.log('New trip started:', event.trip);
-      // Handle new trip request
+      console.log('New ride started:', event.ride);
+      // Handle new ride request
     })
-    .listen('TripAccepted', (event) => {
-      console.log('Trip accepted:', event.trip);
-      // Handle trip acceptance
+    .listen('rideAccepted', (event) => {
+      console.log('ride accepted:', event.ride);
+      // Handle ride acceptance
     })
-    .listen('TripLocationUpdated', (event) => {
-      console.log('Trip location updated:', event.trip, event.location);
+    .listen('rideLocationUpdated', (event) => {
+      console.log('ride location updated:', event.ride, event.location);
       // Handle location update
     })
-    .listen('TripCompleted', (event) => {
-      console.log('Trip completed:', event.trip);
-      // Handle trip completion
+    .listen('rideCompleted', (event) => {
+      console.log('ride completed:', event.ride);
+      // Handle ride completion
     });
 };
 
