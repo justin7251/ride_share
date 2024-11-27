@@ -12,13 +12,6 @@ Route::post('/login/verify', [LoginController::class, 'verify']);
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
   
-    Route::post('/ride', [rideController::class, 'store']);
-    Route::get('/ride/{ride}', [rideController::class, 'show']);
-    Route::put('/ride/{ride}/accept', [rideController::class, 'accept']);
-    Route::put('/ride/{ride}/start', [rideController::class, 'start']);
-    Route::put('/ride/{ride}/complete', [rideController::class, 'complete']);
-    Route::put('/ride/{ride}/driver-location', [rideController::class, 'updateDriverLocation']);
-
     Route::get('/users', function(Request $request) {
         return $request->user();
     });
@@ -31,4 +24,10 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::get('/driver/status', [DriverController::class, 'getStatus']);
 
     Route::post('/rides/search-drivers', [RideController::class, 'searchDrivers']);
+    Route::post('/rides', [RideController::class, 'store']);
+    Route::get('/rides/{ride}', [RideController::class, 'show']);
+    Route::put('/rides/{ride}/accept', [RideController::class, 'accept']);
+    Route::put('/rides/{ride}/start', [RideController::class, 'start']);
+    Route::put('/rides/{ride}/complete', [RideController::class, 'complete']);
+    Route::put('/rides/{ride}/driver-location', [RideController::class, 'updateDriverLocation']);
 });

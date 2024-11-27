@@ -24,4 +24,9 @@ class Driver extends Model
     {
         return $this->hasMany(Ride::class);
     }
+
+    public function location()
+    {
+        return $this->hasOne(DriverLocation::class);
+    }
 }
