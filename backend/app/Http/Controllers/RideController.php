@@ -47,7 +47,6 @@ class RideController extends Controller
                 return [
                     'id' => $driver->id,
                     'name' => $driver->name,
-                    'photo' => $driver->photo,
                     'rating' => $driver->rating,
                     'totalRides' => $driver->total_rides,
                     'distance' => round($driver->distance_meters / 1000, 1), // Convert to km

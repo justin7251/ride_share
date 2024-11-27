@@ -16,46 +16,6 @@ class DriverController extends Controller
         return response()->json($drivers);
     }
 
-    public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'license_number' => 'required|string|unique:drivers',
-            'status' => 'required|in:active,inactive',
-            'vehicle_info' => 'required|array',
-            'vehicle_info.year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
-            'vehicle_info.make' => 'required|string',
-            'vehicle_info.model' => 'required|string',
-            'vehicle_info.color' => 'required|string',
-            'vehicle_info.plate_number' => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $driver = Driver::create([
-            'user_id' => auth()->id(),  // Get authenticated user's ID
-            'name' => $request->name,
-            'license_number' => $request->license_number,
-            'status' => $request->status,
-            'vehicle_info' => $request->vehicle_info
-        ]);
-
-        return response()->json($driver->load('user'), 201);
-    }
-
-    public function show(Request $request)
-    {
-        $driver = Driver::where('user_id', $request->user()->id)->first();
-        
-        if (!$driver) {
-            return response()->json(['message' => 'Driver not found'], 404);
-        }
-        
-        return response()->json($driver->load('user'));
-    }
-
     public function destroy(Driver $driver)
     {
         $driver->delete();
@@ -78,8 +38,7 @@ class DriverController extends Controller
             ]);
         }
 
-        // Retrieve vehicle information
-        $vehicle = $driver->vehicle; // Assuming you have a relationship set up in the Driver model
+        $vehicle = $driver->vehicle_info;
 
         // Retrieve the latest location
         $latestLocation = DB::table('driver_locations')
@@ -130,11 +89,8 @@ class DriverController extends Controller
                 // Update or create driver
                 $driver = $user->driver ?? new Driver();
                 $driver->user_id = $user->id;
+                $driver->name = $request->name;
                 $driver->license_number = $request->license_number;
-                $driver->status = 'active'; // Set status to active when updating
-                $driver->save();
-
-                // Update vehicle information
                 $vehicleData = [
                     'make' => $request->vehicle['make'],
                     'model' => $request->vehicle['model'],
@@ -142,8 +98,6 @@ class DriverController extends Controller
                     'color' => $request->vehicle['color'],
                     'plate_number' => $request->vehicle['plate_number'],
                 ];
-
-                // Assuming you have a relationship set up for vehicle
                 $driver->vehicle_info = $vehicleData;
                 $driver->save();
             });

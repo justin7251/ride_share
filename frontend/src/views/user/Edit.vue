@@ -78,6 +78,28 @@
           </div>
 
           <div class="mb-4">
+            <label for="vehicle_color" class="block text-sm font-medium text-gray-700">Vehicle Color</label>
+            <input
+              type="text"
+              id="vehicle_color"
+              v-model="driver.vehicle.color"
+              class="mt-1 block w-full pl-3 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              required
+            />
+          </div>
+
+          <div class="mb-4">
+            <label for="vehicle_plate_number" class="block text-sm font-medium text-gray-700">Vehicle Plate Number</label>
+            <input
+              type="text"
+              id="vehicle_plate_number"
+              v-model="driver.vehicle.plate_number"
+              class="mt-1 block w-full pl-3 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              required
+            />
+          </div>
+
+          <div class="mb-4">
             <label for="vehicle_year" class="block text-sm font-medium text-gray-700">Vehicle Year</label>
             <input
               type="number"
@@ -121,7 +143,9 @@ const driver = ref({
   vehicle: {
     make: '',
     model: '',
-    year: ''
+    year: '',
+    color: '',
+    plate_number: ''
   }
 })
 
@@ -138,7 +162,7 @@ const fetchUserData = async () => {
     
     driver.value = {
       license_number: data.license_number,
-      vehicle: data.vehicle || { make: '', model: '', year: '' }
+      vehicle: data.vehicle || { make: '', model: '', year: '', color: '', plate_number: '' }
     }
   } catch (error) {
     console.error('Failed to fetch user data:', error)

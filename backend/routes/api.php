@@ -4,7 +4,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\DriverController;
-use App\Http\Controllers\rideController;
 use App\Http\Controllers\RideController;
 
 Route::post('/login', LoginController::class);
@@ -12,9 +11,7 @@ Route::post('/login/register', [LoginController::class, 'register']);
 Route::post('/login/verify', [LoginController::class, 'verify']);
 
 Route::group(['middleware' => 'auth:sanctum'], function () {
-    Route::get('/drivers', [DriverController::class, 'show']);
-    Route::post('/drivers', [DriverController::class, 'store']);
-
+  
     Route::post('/ride', [rideController::class, 'store']);
     Route::get('/ride/{ride}', [rideController::class, 'show']);
     Route::put('/ride/{ride}/accept', [rideController::class, 'accept']);
