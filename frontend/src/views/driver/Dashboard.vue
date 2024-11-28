@@ -133,21 +133,43 @@ const goBack = () => {
 // Methods
 const toggleOnlineStatus = async () => {
   try {
-    const newStatus = !isOnline.value
-    const response = await driverService.updateStatus(newStatus ? 'active' : 'inactive')
-    
-    if (response.status === 'success') {
-      isOnline.value = newStatus
-      if (isOnline.value && window.Echo) {
-        startListeningForrides()
+    const newStatus = !isOnline.value;
+
+    if (newStatus) {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (position) => {
+          const { latitude, longitude } = position.coords;
+
+          // Update the driver's status and location
+          const response = await driverService.updateStatus('active', {
+            lat: latitude,
+            lng: longitude
+          });
+
+          if (response.status === 'success') {
+            isOnline.value = true;
+            startListeningForrides();
+          }
+        }, (error) => {
+          console.error('Error getting location:', error);
+          alert('Location access is required to go online.');
+          isOnline.value = false;
+        });
       } else {
-        stopListeningForrides()
+        alert('Geolocation is not supported by this browser.');
+        isOnline.value = false;
+      }
+    } else {
+      const response = await driverService.updateStatus('inactive');
+      if (response.status === 'success') {
+        isOnline.value = false;
+        stopListeningForrides();
       }
     }
   } catch (error) {
-    console.error('Failed to update status:', error)
+    console.error('Failed to update status:', error);
   }
-}
+};
 
 const startListeningForrides = () => {
   window.Echo.channel('rides')

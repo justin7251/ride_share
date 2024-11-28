@@ -117,23 +117,32 @@ class DriverController extends Controller
     public function updateStatus(Request $request)
     {
         $request->validate([
-            'status' => 'required|in:active,inactive'
+            'status' => 'required|in:active,inactive',
+            'driver_location' => 'nullable|array',
+            'driver_location.lat' => 'required_with:driver_location|numeric',
+            'driver_location.lng' => 'required_with:driver_location|numeric'
         ]);
 
         try {
             $driver = auth()->user()->driver;
             $driver->status = $request->status;
+
+            if ($request->has('driver_location')) {
+                $driver->last_location = DB::raw("POINT({$request->driver_location['lng']}, {$request->driver_location['lat']})");
+                $driver->last_location_updated_at = now();
+            }
             $driver->save();
 
             return response()->json([
-                'message' => 'Driver status updated successfully',
+                'message' => 'Driver status and location updated successfully',
                 'status' => 'success',
                 'driver_status' => $driver->status
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Failed to update driver status',
-                'status' => 'error'
+                'message' => 'Failed to update driver status and location',
+                'status' => 'error',
+                'error' => $e->getMessage()
             ], 500);
         }
     }

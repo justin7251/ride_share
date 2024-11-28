@@ -138,8 +138,10 @@ class RideController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $ride->update($request->all());
-        return response()->json($ride->load(['user', 'driver']));
+        return Ride::transaction(function () use ($ride) {
+            $ride->update($request->all());
+            return response()->json($ride->load(['user', 'driver']));
+        });
     }
 
     public function accept(Request $request, Ride $ride)
@@ -152,12 +154,15 @@ class RideController extends Controller
             return response()->json(['message' => 'Ride already accepted'], 403);
         }
 
-        $ride->update(['driver_id' => $request->user()->id]);
-        
-        // Dispatch the event
-        event(new RideAccepted($ride));
-        
-        return response()->json($ride->load(['user', 'driver']));
+        if ($ride->is_complete || $ride->is_started) {
+            return response()->json(['message' => 'Ride cannot be accepted at this stage'], 403);
+        }
+
+        return Ride::transaction(function () use ($ride) {
+            $ride->update(['driver_id' => $request->user()->id]);
+            event(new RideAccepted($ride));
+            return response()->json($ride->load(['user', 'driver']), 200);
+        });
     }
 
     public function start(Request $request, Ride $ride)
@@ -170,12 +175,11 @@ class RideController extends Controller
             return response()->json(['message' => 'Ride not accepted'], 403);
         }
 
-        $ride->update(['is_started' => true]);
-        
-        // Dispatch the event
-        event(new RideStarted($ride));
-        
-        return response()->json($ride->load(['user', 'driver']));
+        return Ride::transaction(function () use ($ride) {
+            $ride->update(['is_started' => true]);
+            event(new RideStarted($ride));
+            return response()->json($ride->load(['user', 'driver']), 200);
+        });
     }
 
     public function complete(Request $request, Ride $ride)
@@ -188,11 +192,11 @@ class RideController extends Controller
             return response()->json(['message' => 'Ride not started'], 403);
         }
 
-        $ride->update(['is_complete' => true]);
-        
-        event(new rideCompleted($ride));
-        
-        return response()->json($ride->load(['user', 'driver']));
+        return Ride::transaction(function () use ($ride) {
+            $ride->update(['is_complete' => true]);
+            event(new RideCompleted($ride));
+            return response()->json($ride->load(['user', 'driver']), 200);
+        });
     }
 
     public function updateDriverLocation(Request $request, Ride $ride)
@@ -211,10 +215,10 @@ class RideController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $ride->update(['driver_location' => $request->driver_location]);
-        
-        event(new RideLocationUpdated($ride, $request->driver_location));
-        
-        return response()->json($ride);
+        return Ride::transaction(function () use ($ride, $request) {
+            $ride->update(['driver_location' => $request->driver_location]);
+            event(new RideLocationUpdated($ride, $request->driver_location));
+            return response()->json($ride);
+        });
     }
 } 

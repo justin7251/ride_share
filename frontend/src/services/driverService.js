@@ -11,8 +11,8 @@ export const driverService = {
             })
     },
 
-    updateStatus(status) {
-        return api.post('/driver/status', { status })
+    updateStatus(status, driverLocation) {
+        return api.post('/driver/status', { status, driver_location: driverLocation })
             .then(response => {
                 if (response.data) {
                     return response.data

@@ -17,24 +17,17 @@ return new class extends Migration
             $table->json('vehicle_info')->nullable();
             $table->decimal('rating', 3, 2)->default(0.00);
             $table->integer('total_rides')->default(0);
+            $table->point('last_location');
+            $table->timestamp('last_location_updated_at')->nullable();
             $table->timestamps();
+            $table->index('last_location');
         });
     }
 
     public function down(): void
     {
-        if (Schema::hasTable('driver_locations')) {
-            Schema::table('driver_locations', function (Blueprint $table) {
-                if (DB::table('information_schema.KEY_COLUMN_USAGE')
-                    ->where('TABLE_NAME', 'driver_locations')
-                    ->where('CONSTRAINT_NAME', 'driver_locations_driver_id_foreign')
-                    ->exists()
-                ) {
-                    $table->dropForeign(['driver_id']);
-                }
-            });
-        }
-
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('drivers');
+        Schema::enableForeignKeyConstraints();
     }
 };
