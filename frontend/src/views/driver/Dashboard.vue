@@ -49,18 +49,18 @@
           <p class="text-2xl font-semibold text-gray-900">${{ todayStats.earnings }}</p>
         </div>
         <div class="bg-white rounded-lg shadow-md p-4">
-          <p class="text-sm text-gray-600">Completed rides</p>
+          <p class="text-sm text-gray-600">Completed Rides</p>
           <p class="text-2xl font-semibold text-gray-900">{{ todayStats.rides }}</p>
         </div>
       </div>
 
-      <!-- Recent rides -->
+      <!-- Recent Rides -->
       <div class="bg-white rounded-lg shadow-md p-6">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">Recent Rides</h2>
         
-        <div v-if="recentrides.length > 0" class="space-y-4">
+        <div v-if="recentRides.length > 0" class="space-y-4">
           <div 
-            v-for="ride in recentrides" 
+            v-for="ride in recentRides" 
             :key="ride.id"
             class="border-b last:border-b-0 pb-4 last:pb-0"
           >
@@ -95,6 +95,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { driverService } from '@/services/driverService'
+import { websocketService } from '@/services/websocketService'
 
 const router = useRouter()
 const isOnline = ref(false)
@@ -106,7 +107,7 @@ const todayStats = ref({
   rides: 0
 })
 
-const recentrides = ref([
+const recentRides = ref([
   {
     id: 1,
     destination: 'Central Mall',
@@ -148,7 +149,7 @@ const toggleOnlineStatus = async () => {
 
           if (response.status === 'success') {
             isOnline.value = true;
-            startListeningForrides();
+            websocketService.initializeDriverSocket();
           }
         }, (error) => {
           console.error('Error getting location:', error);
@@ -163,37 +164,11 @@ const toggleOnlineStatus = async () => {
       const response = await driverService.updateStatus('inactive');
       if (response.status === 'success') {
         isOnline.value = false;
-        stopListeningForrides();
+        websocketService.stopListeningForRides();
       }
     }
   } catch (error) {
     console.error('Failed to update status:', error);
-  }
-};
-
-const startListeningForrides = () => {
-  window.Echo.channel('rides')
-    .listen('ridestarted', (event) => {
-      console.log('New ride started:', event.ride);
-      // Handle new ride request
-    })
-    .listen('rideAccepted', (event) => {
-      console.log('ride accepted:', event.ride);
-      // Handle ride acceptance
-    })
-    .listen('rideLocationUpdated', (event) => {
-      console.log('ride location updated:', event.ride, event.location);
-      // Handle location update
-    })
-    .listen('rideCompleted', (event) => {
-      console.log('ride completed:', event.ride);
-      // Handle ride completion
-    });
-};
-
-const stopListeningForrides = () => {
-  if (window.Echo) {
-    window.Echo.leaveChannel('rides');
   }
 };
 
@@ -212,6 +187,6 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  stopListeningForrides()
+  websocketService.stopListeningForRides()
 })
 </script> 

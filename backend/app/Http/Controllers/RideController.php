@@ -34,7 +34,9 @@ class RideController extends Controller
                     'destination' => $request->destination,
                     'pickup_lat' => $request->pickupLat,
                     'pickup_lng' => $request->pickupLng,
-                ],
+                    'destination_lat' => $request->destinationLat,
+                    'destination_lng' => $request->destinationLng
+                ], // Search attributes
                 [
                     'driver_id' => null
                 ]
@@ -204,5 +206,97 @@ class RideController extends Controller
             event(new RideLocationUpdated($ride, $request->driver_location));
             return response()->json($ride);
         });
+    }
+
+    public function cancel(Request $request, Ride $ride)
+    {
+        // Ensure only the ride requester can cancel
+        if ($ride->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Prevent cancellation of started or completed rides
+        if ($ride->is_started || $ride->is_complete) {
+            return response()->json(['message' => 'Ride cannot be cancelled at this stage'], 403);
+        }
+
+        return DB::transaction(function () use ($ride) {
+            $ride->update([
+                'status' => 'cancelled',
+                'driver_id' => null
+            ]);
+
+            // Optional: Broadcast cancellation event
+            event(new RideCancelled($ride));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Ride cancelled successfully'
+            ]);
+        });
+    }
+
+    public function track(Request $request, Ride $ride)
+    {
+        // Ensure only the ride requester or driver can track
+        if ($ride->user_id !== $request->user()->id && $ride->driver_id !== $request->user()->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Load related driver and user information
+        $rideDetails = $ride->load(['driver', 'user']);
+
+        return response()->json([
+            'ride' => $rideDetails,
+            'status' => $this->determineRideStatus($ride),
+            'driver' => $ride->driver ? [
+                'name' => $ride->driver->name,
+                'photo' => $ride->driver->profile_photo_url,
+                'vehicle' => $ride->driver->vehicle_details,
+                'rating' => $ride->driver->rating
+            ] : null,
+            'location' => $ride->driver_location,
+            'eta' => $this->calculateETA($ride),
+            'distance' => $this->calculateDistance($ride)
+        ]);
+    }
+
+    // Helper methods
+    private function determineRideStatus(Ride $ride)
+    {
+        if ($ride->is_complete) return 'Completed';
+        if ($ride->is_started) return 'In Progress';
+        if ($ride->driver_id) return 'Driver Assigned';
+        return 'Searching for Driver';
+    }
+
+    private function calculateETA(Ride $ride)
+    {
+        // Implement your ETA calculation logic
+        return 15; // Default 15 minutes
+    }
+
+    private function calculateDistance(Ride $ride)
+    {
+        // Implement distance calculation logic
+        return $this->haversineDistance(
+            $ride->pickup_lat, 
+            $ride->pickup_lng, 
+            $ride->destination_lat, 
+            $ride->destination_lng
+        );
+    }
+
+    private function haversineDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        // Haversine formula implementation
+        $earthRadius = 6371; // kilometers
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat/2) * sin($dLat/2) +
+             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+             sin($dLon/2) * sin($dLon/2);
+        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+        return $earthRadius * $c;
     }
 } 

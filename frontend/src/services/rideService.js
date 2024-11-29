@@ -36,11 +36,15 @@ export const rideService = {
     }
   },
 
-  async searchRide(pickup, destination) {
+  async searchRide(pickup, destination, pickupLat, pickupLng, destinationLat, destinationLng) {
     try {
-      const response = await api.post('/rides/search', {
+      const response = await api.post('/rides/search-drivers', {
         pickup,
-        destination
+        destination,
+        pickupLat,
+        pickupLng,
+        destinationLat,
+        destinationLng
       });
       return response.data;
     } catch (error) {
@@ -59,50 +63,13 @@ export const rideService = {
     }
   },
 
-  async searchDrivers(pickup, destination) {
+  async cancelRide(rideId) {
     try {
-      const response = await api.post('/rides/search-drivers', {
-        pickup,
-        destination,
-        timestamp: new Date().toISOString()
-      });
-
-      return response.data;
+      const response = await api.post(`/rides/${rideId}/cancel`)
+      return response.data
     } catch (error) {
-      console.error('Error searching for drivers:', error);
-      if (process.env.NODE_ENV === 'development') {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        return {
-          success: true,
-          drivers: [
-            {
-              id: 'dev-driver-1',
-              name: 'John Driver',
-              rating: 4.8,
-              distance: 1.2, // km from pickup
-              estimatedArrival: new Date(Date.now() + 5 * 60000), // 5 mins
-              vehicle: {
-                model: 'Toyota Camry',
-                color: 'Silver',
-                plate: 'ABC 123'
-              }
-            },
-            {
-              id: 'dev-driver-2',
-              name: 'Sarah Driver',
-              rating: 4.9,
-              distance: 1.8,
-              estimatedArrival: new Date(Date.now() + 7 * 60000),
-              vehicle: {
-                model: 'Honda Civic',
-                color: 'Black',
-                plate: 'XYZ 789'
-              }
-            }
-          ]
-        };
-      }
-      throw error;
+      console.error('Ride cancellation error:', error)
+      throw error
     }
   }
 };

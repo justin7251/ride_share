@@ -1,53 +1,90 @@
 <template>
-  <div>
-    <!-- Status Bar -->
-    <div class="bg-white shadow-sm">
-      <div class="max-w-lg mx-auto px-4 py-4">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <button 
-              @click="showCancelModal = true"
-              class="p-2 rounded-lg text-red-600 hover:bg-red-50"
-            >
-              Cancel Ride
-            </button>
-          </div>
-          <div class="text-sm font-medium text-gray-600">
-            {{ rideStatus }}
+  <div class="min-h-screen bg-gray-100 flex flex-col">
+    <div class="max-w-md mx-auto w-full flex-grow flex flex-col justify-center p-6">
+      <!-- Navigation Header -->
+      <div class="absolute top-4 left-4 z-10">
+        <button 
+          @click="goBack" 
+          class="bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Ride Request Status Card -->
+      <div class="bg-white rounded-lg shadow-xl p-6 text-center relative">
+        <!-- Cancel Ride Button -->
+        <button 
+          v-if="!isRideCancelled && !driver"
+          @click="cancelRide"
+          class="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm hover:bg-red-600 transition-colors"
+        >
+          Cancel Ride
+        </button>
+
+        <!-- Animated Waiting Illustration -->
+        <div class="mb-6 flex justify-center">
+          <div class="relative w-32 h-32">
+            <div class="absolute inset-0 bg-green-500 opacity-75 rounded-full animate-ping"></div>
+            <div class="relative z-10 bg-green-600 w-32 h-32 rounded-full flex items-center justify-center">
+              <svg class="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+              </svg>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Driver Details -->
-    <div class="max-w-lg mx-auto px-4 py-4">
-      <DriverCard :driver="driver" />
-    </div>
+        <!-- Status Message -->
+        <h2 class="text-2xl font-bold mb-4 text-gray-800">
+          {{ isRideCancelled ? 'Ride Cancelled' : rideStatus }}
+        </h2>
+        
+        <!-- Pickup and Destination Info -->
+        <div class="mb-6 text-gray-600">
+          <p class="mb-2">
+            <span class="font-semibold">Pickup:</span> {{ pickup }}
+          </p>
+          <p>
+            <span class="font-semibold">Destination:</span> {{ destination }}
+          </p>
+        </div>
 
-    <!-- ride Progress -->
-    <div class="max-w-lg mx-auto px-4 py-4">
-      <rideProgress :ride-details="rideDetails" />
-    </div>
+        <!-- Driver Details (when available) -->
+        <div v-if="driver" class="mt-6 bg-gray-50 rounded-lg p-4">
+          <div class="flex items-center justify-center space-x-4">
+            <img 
+              :src="driver.photo || '/default-avatar.png'" 
+              alt="Driver" 
+              class="w-16 h-16 rounded-full object-cover"
+            />
+            <div>
+              <h3 class="text-lg font-semibold">{{ driver.name }}</h3>
+              <p class="text-sm text-gray-600">
+                {{ driver.vehicle.model }} ({{ driver.vehicle.color }})
+              </p>
+            </div>
+          </div>
+        </div>
 
-    <!-- Cancel Modal -->
-    <div v-if="showCancelModal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-lg max-w-md w-full p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Cancel Ride</h3>
-        <p class="text-gray-600 mb-6">Are you sure you want to cancel this ride? A cancellation fee may apply.</p>
-        <div class="flex justify-end space-x-4">
-          <button 
-            @click="showCancelModal = false"
-            class="px-4 py-2 text-gray-600 hover:text-gray-800"
-          >
-            Keep Ride
-          </button>
-          <button 
-            @click="cancelRide"
-            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-            :disabled="isCancelling"
-          >
-            {{ isCancelling ? 'Cancelling...' : 'Yes, Cancel' }}
-          </button>
+        <!-- Cancellation Confirmation -->
+        <div v-if="showCancellationConfirmation" class="mt-4">
+          <p class="text-red-600 mb-2">Are you sure you want to cancel this ride?</p>
+          <div class="flex justify-center space-x-4">
+            <button 
+              @click="confirmCancelRide"
+              class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+            >
+              Yes, Cancel Ride
+            </button>
+            <button 
+              @click="cancelCancellation"
+              class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
+            >
+              No, Keep Ride
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -55,76 +92,116 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { format, addMinutes } from 'date-fns'
+import { rideService } from '@/services/rideService'
 import { etaService } from '@/services/etaService'
-import DriverCard from '@/components/ride/DriverCard.vue'
-import RideProgress from '@/components/ride/rideProgress.vue'
 
-const route = useRoute()  // Make sure each statement has a semicolon
-const router = useRouter()  // Make sure each statement has a semicolon
+const router = useRouter()
+const route = useRoute()
 
-// Initialize component state
-const driver = ref({
-  id: null,
-  photo: '/default-avatar.png',
-  name: 'Loading...',
-  rating: 0,
-  totalRides: 0,
-  vehicle: {
-    model: '-',
-    color: '-',
-    plate: '-'
-  }
-})  // Ensure proper semicolon usage at the end of every declaration
+const rideId = computed(() => route.params.rideId)
+const pickup = computed(() => route.query.pickup)
+const destination = computed(() => route.query.destination)
 
-const currentETA = ref(new Date())
-const initialETA = ref(new Date())
-const remainingDistance = ref(0)
-const trafficAlerts = ref([])
-const rideProgressPercentage = ref(0)  // Renamed this to avoid conflict with component
 const rideStatus = ref('Finding your driver...')
-const showCancelModal = ref(false)
-const isCancelling = ref(false)
+const driver = ref(null)
+const rideDetails = ref(null)
+const isRideCancelled = ref(false)
+const showCancellationConfirmation = ref(false)
 
-// Computed ETA updates
-const etaDelayMinutes = computed(() => {
-  const totalDelay = trafficAlerts.value.reduce((acc, alert) => acc + alert.delay, 0)
-  return totalDelay
-})
+// WebSocket connection
+let socket = null
 
-const updatedETA = computed(() => {
-  return addMinutes(initialETA.value, etaDelayMinutes.value)
-})
-
-// Format ETA for display
-const formatETA = (date) => {
-  return format(date, 'h:mm a')
+const goBack = () => {
+  router.push('/dashboard')
 }
 
-// Ensure proper indentation and semicolons in the functions
-const updateETAAndDistance = async () => {
+const cancelRide = () => {
+  showCancellationConfirmation.value = true
+}
+
+const confirmCancelRide = async () => {
   try {
-    const response = await fetch(`/api/rides/${route.params.rideId}/eta`)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
-
-    if (!data) {
-      throw new Error('No data received from server')
-    }
-
-    currentETA.value = new Date(data.eta)
-    remainingDistance.value = data.remainingDistance.toFixed(1)
-    rideProgressPercentage.value = data.progress
-
-    if (data.trafficAlerts) {
-      trafficAlerts.value = data.trafficAlerts
-    }
+    await rideService.cancelRide(rideId.value)
+    isRideCancelled.value = true
+    rideStatus.value = 'Ride Cancelled'
+    showCancellationConfirmation.value = false
+    
+    // Navigate back to ride search after a short delay
+    setTimeout(() => {
+      router.push('/dashboard')
+    }, 2000)
   } catch (error) {
-    console.error('Failed to update ETA:', error)
+    console.error('Failed to cancel ride:', error)
+    // Optionally show an error message to the user
   }
 }
+
+const cancelCancellation = () => {
+  showCancellationConfirmation.value = false
+}
+
+const initializeWebSocket = () => {
+  socket = new WebSocket(`ws://your-websocket-endpoint/rides/${rideId.value}`)
+
+  socket.onopen = () => {
+    console.log('WebSocket connection established')
+  }
+
+  socket.onmessage = (event) => {
+    const data = JSON.parse(event.data)
+    
+    switch (data.type) {
+      case 'DRIVER_ASSIGNED':
+        driver.value = data.driver
+        rideStatus.value = 'Driver assigned!'
+        break
+      
+      case 'DRIVER_ARRIVED':
+        rideStatus.value = 'Driver has arrived'
+        break
+      
+      case 'RIDE_STARTED':
+        rideStatus.value = 'Ride in progress'
+        break
+      
+      case 'RIDE_COMPLETED':
+        rideStatus.value = 'Ride completed'
+        break
+    }
+  }
+
+  socket.onerror = (error) => {
+    console.error('WebSocket error:', error)
+  }
+}
+
+onMounted(async () => {
+  try {
+    // Track ride details
+    const trackingDetails = await rideService.trackRide(rideId.value)
+    
+    // Update component state
+    rideDetails.value = trackingDetails
+    driver.value = trackingDetails.driver
+    rideStatus.value = trackingDetails.status
+
+    // Initialize WebSocket connection
+    initializeWebSocket()
+  } catch (error) {
+    console.error('Ride tracking error:', error)
+    rideStatus.value = 'Unable to track ride'
+  }
+})
+
+onUnmounted(() => {
+  // Clean up WebSocket connection
+  if (socket) {
+    socket.close()
+  }
+  
+  // Stop ride tracking
+  etaService.stopTracking(rideId.value)
+})
 </script>

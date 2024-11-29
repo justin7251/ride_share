@@ -21,9 +21,10 @@ return new class extends Migration
             $table->boolean('is_complete')->default(false);
             $table->decimal('pickup_lat', 10, 8)->nullable();
             $table->decimal('pickup_lng', 11, 8)->nullable();
+            $table->decimal('destination_lat', 10, 8)->nullable();
+            $table->decimal('destination_lng', 11, 8)->nullable();
             $table->json('origin')->nullable();
             $table->json('destination')->nullable();
-            $table->string('destination_name')->nullable();
             $table->json('driver_location')->nullable();
             $table->enum('status', ['pending', 'started', 'completed'])->default('pending');
             $table->timestamps();

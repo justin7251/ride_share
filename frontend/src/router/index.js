@@ -6,7 +6,6 @@ import Verify from '../views/Verify.vue'
 import auth  from '../stores/auth'
 import Dashboard from '../views/Dashboard.vue'
 import RideSearch from '../views/rider/RideSearch.vue';
-import RideOptions from '../views/rider/RideOptions.vue';
 import RideTracking from '../views/rider/RideTracking.vue';
 import DriverDashboard from '../views/driver/Dashboard.vue';
 import NotFound from '../views/NotFound.vue';
@@ -18,7 +17,6 @@ const routes = [
   { path: '/verify/:phone', name: 'verify', component: Verify },
   { path: '/dashboard', name: 'dashboard', component: Dashboard },
   { path: '/rider/search', name: 'ride-search', component: RideSearch },
-  { path: '/rider/options', name: 'ride-options', component: RideOptions },
   { path: '/rider/tracking/:rideId', name: 'ride-tracking', component: RideTracking },
   { path: '/driver/dashboard', name: 'driver-dashboard', component: DriverDashboard },
   { path: '/user/edit', name: 'user-edit', component: UserEdit },

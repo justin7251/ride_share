@@ -39,9 +39,23 @@ class RideRequestEvent implements ShouldBroadcast
     public function broadcastWith()
     {
         return [
-            'ride_id' => $this->rideRequest->id,
-            'pickup' => $this->rideRequest->origin,
-            'destination' => $this->rideRequest->destination,
+            'type' => 'NEW_RIDE_REQUEST',
+            'ride' => [
+                'id' => $this->rideRequest->id,
+                'pickup' => $this->rideRequest->origin,
+                'destination' => $this->rideRequest->destination,
+                'pickup_lat' => $this->rideRequest->pickup_lat,
+                'pickup_lng' => $this->rideRequest->pickup_lng,
+            ],
+            'activeDrivers' => $this->activeDrivers->map(function($driver) {
+                return [
+                    'id' => $driver->id,
+                    'name' => $driver->name,
+                    'car_model' => $driver->car_model,
+                    'car_color' => $driver->car_color,
+                    'plate_number' => $driver->plate_number
+                ];
+            })
         ];
     }
 }
