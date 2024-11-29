@@ -53,7 +53,7 @@ class LoginController extends Controller
                 Driver::create([
                     'user_id' => $user->id,
                     'name' => $request->name,
-                    'last_location' => null
+                    'last_location' => DB::raw("POINT(0, 0)")
                 ]);
 
                 $this->sendVerificationCode($user);

@@ -10,6 +10,8 @@ use App\Events\RideStarted;
 use App\Events\RideCompleted;
 use App\Events\RideLocationUpdated;
 use App\Events\RideAccepted;
+use App\Events\RideRequestEvent;
+use Illuminate\Support\Facades\Validator;
 
 class RideController extends Controller
 {
@@ -18,57 +20,39 @@ class RideController extends Controller
         $request->validate([
             'pickup' => 'required|string',
             'destination' => 'required|string',
+            'pickupLat' => 'required|numeric',
+            'pickupLng' => 'required|numeric',
             'timestamp' => 'nullable|date'
         ]);
 
         try {
-            // Find active drivers within a reasonable radius (e.g., 5km) of pickup
+            // Add the ride request to a holding tank
+            $rideRequest = Ride::firstOrCreate(
+                [
+                    'user_id' => auth()->id(),
+                    'origin' => $request->pickup,
+                    'destination' => $request->destination,
+                    'pickup_lat' => $request->pickupLat,
+                    'pickup_lng' => $request->pickupLng,
+                ],
+                [
+                    'driver_id' => null
+                ]
+            );
+
+            // Notify available drivers
             $activeDrivers = Driver::where('status', 'active')
                 ->whereNull('current_ride_id')
-                ->where('last_location_updated_at', '>', now()->subMinutes(5))
-                ->select(
-                    'drivers.*',
-                    DB::raw('ST_Distance_Sphere(
-                        last_location,
-                        POINT(?, ?)
-                    ) as distance_meters'
-                    ),
-                    'users.name'
-                )
-                ->join('users', 'drivers.user_id', '=', 'users.id')
-                ->having('distance_meters', '<', 5000)
-                ->orderBy('distance_meters', 'asc')
-                ->limit(5)
+                ->where('last_location_updated_at', '>', now()->subMinutes(30))
                 ->get();
 
-            if ($activeDrivers->isEmpty()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No drivers available in your area'
-                ]);
-            }
-
-            $drivers = $activeDrivers->map(function ($driver) {
-                return [
-                    'id' => $driver->id,
-                    'name' => $driver->name,
-                    'rating' => $driver->rating,
-                    'totalRides' => $driver->total_rides,
-                    'distance' => round($driver->distance_meters / 1000, 1), // Convert to km
-                    'estimatedArrival' => now()->addMinutes(ceil($driver->distance_meters / 500)), // Rough ETA calculation
-                    'vehicle' => [
-                        'model' => $driver->vehicle_model,
-                        'color' => $driver->vehicle_color,
-                        'plate' => $driver->vehicle_plate
-                    ]
-                ];
-            });
-
+            broadcast(new RideRequestEvent($rideRequest, $activeDrivers));
+ 
             return response()->json([
                 'success' => true,
-                'drivers' => $drivers
+                'rideRequestId' => $rideRequest->id,
+                'drivers' => $activeDrivers
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

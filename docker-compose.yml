@@ -17,6 +17,9 @@ services:
     ports:
       - "9000:80"
       - "6001:6001"
+    command: >
+      sh -c "php artisan serve --host=0.0.0.0 --port=80 &&
+             php artisan websockets:serve"
 
   webserver:
     image: nginx:alpine

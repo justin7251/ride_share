@@ -17,6 +17,7 @@ return new class extends Migration
             $table->json('vehicle_info')->nullable();
             $table->decimal('rating', 3, 2)->default(0.00);
             $table->integer('total_rides')->default(0);
+            $table->foreignId('current_ride_id')->nullable()->constrained('rides')->nullOnDelete();
             $table->point('last_location');
             $table->timestamp('last_location_updated_at')->nullable();
             $table->timestamps();

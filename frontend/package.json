@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fawmi/vue-google-maps": "^0.9.79",
     "axios": "^1.6.2",
     "date-fns": "^4.1.0",
     "laravel-echo": "^1.17.0",
