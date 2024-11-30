@@ -28,11 +28,19 @@ export const rideService = {
 
   async trackRide(rideId) {
     try {
-      const response = await api.get(`/rides/${rideId}/track`);
-      return response.data;
+      const response = await api.get(`/rides/${rideId}/track`)
+      
+      return {
+        ride: response.data.ride,
+        status: response.data.status,
+        driver: response.data.driver,
+        location: response.data.location,
+        eta: response.data.eta,
+        distance: response.data.distance
+      }
     } catch (error) {
-      console.error('Error tracking ride:', error);
-      throw error;
+      console.error('Ride tracking error:', error)
+      throw error
     }
   },
 
@@ -66,9 +74,24 @@ export const rideService = {
   async cancelRide(rideId) {
     try {
       const response = await api.post(`/rides/${rideId}/cancel`)
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to cancel ride')
+      }
+      
       return response.data
     } catch (error) {
       console.error('Ride cancellation error:', error)
+      throw error
+    }
+  },
+
+  async acceptRide(rideId) {
+    try {
+      const response = await api.put(`/rides/${rideId}/accept`)
+      return response.data
+    } catch (error) {
+      console.error('Failed to accept ride:', error)
       throw error
     }
   }

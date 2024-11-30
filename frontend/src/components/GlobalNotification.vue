@@ -6,9 +6,10 @@
     <div class="flex items-center justify-between">
       <div>
         <h3 class="font-bold text-gray-900">New Ride Request</h3>
+        Debug: {{ JSON.stringify(websocketService.notification.value) }}
         <p class="text-sm text-gray-600">
-          Ride from {{ websocketService.notification.value.ride.pickup }} 
-          to {{ websocketService.notification.value.ride.destination }}
+            Ride from {{ websocketService.notification.value.ride.pickup }} 
+            to {{ websocketService.notification.value.ride.destination }}
         </p>
       </div>
     </div>

@@ -7,7 +7,7 @@ export const etaService = {
   async startTracking(rideId) {
     try {
       const response = await fetch(`/api/rides/${rideId}/track`, {
-        method: 'POST'
+        method: 'GET'
       })
       
       if (!response.ok) {

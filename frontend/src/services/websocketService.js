@@ -7,89 +7,60 @@ export const websocketService = {
   notification: ref(null),
 
   initializeDriverSocket() {
-    console.group('WebSocket Initialization')
-    console.log('Detailed Initialization:', {
-      key: import.meta.env.VITE_PUSHER_APP_KEY,
-      cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
-      host: window.location.hostname,
-      port: 6001
-    })
-
+    Pusher.logToConsole = true
     window.Pusher = Pusher
 
     try {
       this.echo = new Echo({
         broadcaster: 'pusher',
         key: import.meta.env.VITE_PUSHER_APP_KEY,
-        cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
-        wsHost: window.location.hostname,
-        wsPort: 6001,
+        wsHost: import.meta.env.VITE_PUSHER_HOST,
+        wsPort: import.meta.env.VITE_PUSHER_PORT,
         forceTLS: false,
         disableStats: true,
-        enabledTransports: ['ws', 'wss'],
         encrypted: false,
-        authEndpoint: '/broadcasting/auth'
+        cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+        enabledTransports: ['ws', 'wss']
       })
 
-      const channel = this.echo.channel('available-rides')
-      
-      console.log('Detailed Channel Subscription:', {
-        channelName: 'available-rides',
-        channelObject: channel,
-        channelMethods: Object.keys(channel)
-      })
-
-      channel.listen('RideRequestEvent', (event) => {
-        console.group('🚨 Comprehensive WebSocket Event')
-        console.log('Raw Event Structure:', JSON.stringify(event, null, 2))
-        console.log('Event Type:', event.type)
-        console.log('Ride Request Details:', event.rideRequest)
-        console.log('Active Drivers:', event.activeDrivers)
-        console.groupEnd()
-
-        this.notification.value = {
-          type: 'NEW_RIDE_REQUEST',
-          ride: event.rideRequest || {},
-          activeDrivers: event.activeDrivers || [],
-          timestamp: new Date()
-        }
-      })
-
-      console.log('Driver Socket Initialized Successfully')
-      console.groupEnd()
-
+      this.echo.channel('available-rides')
+        .listen('RideRequestEvent', (data) => {
+          console.log('WebSocket Ride Request:', data)
+          this.notification.value = {
+            type: 'NEW_RIDE_REQUEST',
+            ride: data.ride || {},
+            activeDrivers: data.activeDrivers || [],
+            timestamp: new Date()
+          }
+        })
+        .listen('RideCancelled', (data) => {
+          console.log('Ride Cancelled:', data)
+          this.notification.value = {
+            type: 'RIDE_CANCELLED',
+            ride: data.ride || {},
+            reason: data.reason || 'Unspecified',
+            timestamp: new Date()
+          }
+        })
     } catch (error) {
-      console.error('Comprehensive WebSocket Error:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      })
-      console.groupEnd()
+      console.error('WebSocket Initialization Error:', error)
     }
   },
 
-  listenForRideUpdates(rideId) {
-    if (!this.echo) return
-
-    this.echo.channel(`ride.${rideId}`)
-      .listen('RideAccepted', (event) => {
-        console.log('Ride accepted:', event)
-      })
-      .listen('RideStarted', (event) => {
-        console.log('Ride started:', event)
-      })
+  stopListeningForRides() { 
+    this.echo.channel('available-rides').stopListening('RideRequestEvent')
   },
-
-  stopListeningForRides() {
-    if (this.echo) {
-      this.echo.disconnect()
-    }
-  },
-
   clearNotification() {
     this.notification.value = null
+  },
+  handleRideRequest(data) {
+    this.notification.value = data
+  },
+  handleRideCancellation(ride) {
+    this.notification.value = {
+      type: 'RIDE_CANCELLED',
+      ride: ride,
+      timestamp: new Date()
+    }
   }
 }
-
-// Prevent auto-initialization
-// websocketService.initializeDriverSocket()

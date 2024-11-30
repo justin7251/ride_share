@@ -35,12 +35,11 @@ return [
             'secret' => env('PUSHER_APP_SECRET'),
             'app_id' => env('PUSHER_APP_ID'),
             'options' => [
-                'host' => env('PUSHER_HOST', 'localhost'),
+                'host' => env('PUSHER_HOST', 'host.docker.internal'),
                 'port' => env('PUSHER_PORT', 6001),
-                'scheme' => env('PUSHER_SCHEME', 'http'),
+                'cluster' => env('PUSHER_APP_CLUSTER', 'mt1'),
                 'encrypted' => false,
                 'useTLS' => false,
-                'cluster' => env('PUSHER_APP_CLUSTER', 'mt1'),
                 'disableStats' => true
             ],
         ],

@@ -30,4 +30,6 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::put('/rides/{ride}/start', [RideController::class, 'start']);
     Route::put('/rides/{ride}/complete', [RideController::class, 'complete']);
     Route::put('/rides/{ride}/driver-location', [RideController::class, 'updateDriverLocation']);
+    Route::post('/rides/{ride}/cancel', [RideController::class, 'cancel']);
+    Route::get('/rides/{ride}/track', [RideController::class, 'track']);
 });

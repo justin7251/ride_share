@@ -225,9 +225,8 @@ class RideController extends Controller
                 'status' => 'cancelled',
                 'driver_id' => null
             ]);
-
-            // Optional: Broadcast cancellation event
-            event(new RideCancelled($ride));
+            // TODO: Broadcast cancellation event
+            // event(new RideCancelled($ride));
 
             return response()->json([
                 'success' => true,
@@ -251,7 +250,6 @@ class RideController extends Controller
             'status' => $this->determineRideStatus($ride),
             'driver' => $ride->driver ? [
                 'name' => $ride->driver->name,
-                'photo' => $ride->driver->profile_photo_url,
                 'vehicle' => $ride->driver->vehicle_details,
                 'rating' => $ride->driver->rating
             ] : null,
