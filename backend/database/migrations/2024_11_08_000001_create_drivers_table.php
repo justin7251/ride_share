@@ -17,11 +17,9 @@ return new class extends Migration
             $table->json('vehicle_info')->nullable();
             $table->decimal('rating', 3, 2)->default(0.00);
             $table->integer('total_rides')->default(0);
-            $table->foreignId('current_ride_id')->nullable()->constrained('rides')->nullOnDelete();
-            $table->point('last_location');
+            $table->point('last_location')->notNullable();
             $table->timestamp('last_location_updated_at')->nullable();
             $table->timestamps();
-            $table->index('last_location');
         });
     }
 
@@ -31,4 +29,5 @@ return new class extends Migration
         Schema::dropIfExists('drivers');
         Schema::enableForeignKeyConstraints();
     }
+
 };
