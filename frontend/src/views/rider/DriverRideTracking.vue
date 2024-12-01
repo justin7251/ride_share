@@ -71,7 +71,7 @@
         <!-- Ride Actions -->
         <div class="space-y-4 mb-6">
           <button 
-            v-if="ride.status === 'accepted'"
+            v-if="ride.driverStatus === 'accepted'"
             @click="navigateToPickup"
             class="w-full bg-blue-500 text-white px-6 py-4 rounded-lg 
                    hover:bg-blue-600 transition duration-300 flex items-center justify-center text-lg"
@@ -81,7 +81,7 @@
           </button>
 
           <button 
-            v-if="ride.status === 'accepted'"
+            v-if="ride.driverStatus === 'Driver Assigned'"
             @click="startRide"
             class="w-full bg-green-500 text-white px-6 py-4 rounded-lg 
                    hover:bg-green-600 transition duration-300 flex items-center justify-center text-lg"
@@ -91,7 +91,7 @@
           </button>
 
           <button 
-            v-if="ride.status === 'started'"
+            v-if="ride.driverStatus === 'In Progress'"
             @click="completeRide"
             class="w-full bg-purple-500 text-white px-6 py-4 rounded-lg 
                    hover:bg-purple-600 transition duration-300 flex items-center justify-center text-lg"
@@ -226,7 +226,7 @@ const startRide = async () => {
   try {
     const response = await rideService.startRide(rideId.value)
     ride.value = response.ride
-    
+    console.log('Ride:', ride.value)
     // Update map to show destination route
     initializeMap()
   } catch (error) {
@@ -258,7 +258,7 @@ const fetchRideDetails = async () => {
     console.log('Ride Details:', ride.value)
   } catch (error) {
     console.error('Failed to fetch ride details:', error)
-    // router.push('/driver/dashboard')
+    router.push('/driver/dashboard')
   }
 }
 

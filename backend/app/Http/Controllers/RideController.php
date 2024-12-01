@@ -195,7 +195,7 @@ class RideController extends Controller
 
         return Ride::transaction(function () use ($ride) {
             $ride->update(['is_complete' => true, 'status' => 'completed']);
-            event(new RideCompleted($ride));
+            // event(new RideCompleted($ride));
             return response()->json($this->getRideDetails($ride), 200);
         });
     }

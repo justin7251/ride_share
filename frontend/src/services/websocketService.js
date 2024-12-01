@@ -33,9 +33,33 @@ export const websocketService = {
             timestamp: new Date()
           }
         })
+        .listen('DriverLocationUpdated', (data) => {
+            console.log('Driver Location Updated:', data)
+            this.notification.value = {
+              type: 'DRIVER_LOCATION_UPDATE',
+              location: data.location || {},
+              timestamp: new Date()
+            }
+        })
+        .listen('RideStarted', (data) => {
+            console.log('Ride Started:', data)
+            this.notification.value = {
+            type: 'RIDE_STARTED',
+            ride: data.ride || {},
+            timestamp: new Date()
+            }
+        })
+        .listen('RideCompleted', (data) => {
+            console.log('Ride Completed:', data)
+            this.notification.value = {
+              type: 'RIDE_COMPLETED',
+              ride: data.ride || {},
+              timestamp: new Date()
+            }
+        })
         .listen('RideCancelled', (data) => {
-          console.log('Ride Cancelled:', data)
-          this.notification.value = {
+            console.log('Ride Cancelled:', data)
+            this.notification.value = {
             type: 'RIDE_CANCELLED',
             ride: data.ride || {},
             reason: data.reason || 'Unspecified',
@@ -56,11 +80,20 @@ export const websocketService = {
   handleRideRequest(data) {
     this.notification.value = data
   },
-  handleRideCancellation(ride) {
+  handleRideAcceptance(data) {
     this.notification.value = {
-      type: 'RIDE_CANCELLED',
-      ride: ride,
+      type: 'RIDE_ACCEPTED',
+      ride: data.ride,
+      driver: data.driver,
+      timestamp: new Date()
+    }
+  },
+  handleRideStart(data) {
+    this.notification.value = {
+      type: 'RIDE_STARTED',
+      ride: data.ride,
       timestamp: new Date()
     }
   }
+  
 }
