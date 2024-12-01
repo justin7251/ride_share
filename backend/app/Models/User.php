@@ -47,4 +47,14 @@ class User extends Authenticatable
     {
         return $this->hasOne(Driver::class);
     }
+
+    public function isDriver()
+    {
+        return $this->driver()->exists();
+    }
+
+    public function getIsDriverAttribute()
+    {
+        return $this->driver()->exists();
+    }
 }

@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('verification_code', 6)->nullable();
             $table->timestamp('phone_verified_at')->nullable();
+            $table->boolean('is_driver')->default(false);
+            $table->timestamp('driver_verified_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

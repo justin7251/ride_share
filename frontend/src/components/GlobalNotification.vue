@@ -6,7 +6,6 @@
     <div class="flex items-center justify-between">
       <div>
         <h3 class="font-bold text-gray-900">New Ride Request</h3>
-        Debug: {{ JSON.stringify(websocketService.notification.value) }}
         <p class="text-sm text-gray-600">
             Ride from {{ websocketService.notification.value.ride.pickup }} 
             to {{ websocketService.notification.value.ride.destination }}
@@ -41,8 +40,22 @@ const router = useRouter()
 const acceptRide = async () => {
   const ride = websocketService.notification.value.ride
   try {
-    const response = await rideService.acceptRide(ride.id)
-    router.push(`/driver/ride/${ride.id}`)
+    const { ride: acceptedRide } = await rideService.acceptRide(ride.id)
+    
+    // Route to driver ride tracking with full ride details
+    router.push({
+      name: 'driver-ride-tracking', 
+      params: { rideId: acceptedRide.id },
+      query: {
+        // Optional: Pass additional context if needed
+        origin: acceptedRide.origin,
+        destination: acceptedRide.destination,
+        driver: acceptedRide.driver,
+        user: acceptedRide.user,
+        vehicle: acceptedRide.driver.vehicle_info
+      }
+    })
+    
     websocketService.clearNotification()
   } catch (error) {
     console.error('Failed to accept ride:', error)

@@ -50,6 +50,7 @@ class DriverController extends Controller
             'name' => $user->name,
             'phone' => $user->phone,
             'email' => $user->email,
+            'is_driver' => $user->is_driver,
             'license_number' => $driver->license_number,
             'vehicle' => $vehicle,
             'location' => $latestLocation ? [
@@ -64,13 +65,18 @@ class DriverController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . auth()->id(),
-            'license_number' => 'required|string|unique:drivers,license_number,' . optional(auth()->user()->driver)->id,
-            'vehicle' => 'required|array',
-            'vehicle.make' => 'required|string',
-            'vehicle.model' => 'required|string',
-            'vehicle.year' => 'required|integer|min:1900|max:' . (date('Y') + 1),
-            'vehicle.color' => 'required|string',
-            'vehicle.plate_number' => 'required|string'
+            
+            // Driver-specific validations
+            'is_driver' => 'sometimes|boolean',
+            'license_number' => 'required_if:is_driver,true|unique:drivers,license_number,' . optional(auth()->user()->driver)->id,
+            
+            // Vehicle validations
+            'vehicle' => 'required_if:is_driver,true|array',
+            'vehicle.make' => 'required_if:is_driver,true|string',
+            'vehicle.model' => 'required_if:is_driver,true|string',
+            'vehicle.year' => 'required_if:is_driver,true|integer|min:1900|max:' . (date('Y') + 1),
+            'vehicle.color' => 'required_if:is_driver,true|string',
+            'vehicle.plate_number' => 'required_if:is_driver,true|string'
         ]);
 
         if ($validator->fails()) {
@@ -84,32 +90,46 @@ class DriverController extends Controller
                 $user->update([
                     'name' => $request->name,
                     'email' => $request->email,
+                    'is_driver' => $request->is_driver ?? false
                 ]);
 
-                // Update or create driver
-                $driver = $user->driver ?? new Driver();
-                $driver->user_id = $user->id;
-                $driver->name = $request->name;
-                $driver->license_number = $request->license_number;
-                $vehicleData = [
-                    'make' => $request->vehicle['make'],
-                    'model' => $request->vehicle['model'],
-                    'year' => $request->vehicle['year'],
-                    'color' => $request->vehicle['color'],
-                    'plate_number' => $request->vehicle['plate_number'],
-                ];
-                $driver->vehicle_info = $vehicleData;
-                $driver->save();
+                // Handle driver details if is_driver is true
+                if ($request->is_driver) {
+                    // Update or create driver
+                    $driver = $user->driver ?? new Driver();
+                    $driver->user_id = $user->id;
+                    $driver->name = $request->name;
+                    $driver->license_number = $request->license_number;
+                    
+                    // Prepare vehicle data
+                    $vehicleData = [
+                        'make' => $request->vehicle['make'],
+                        'model' => $request->vehicle['model'],
+                        'year' => $request->vehicle['year'],
+                        'color' => $request->vehicle['color'],
+                        'plate_number' => $request->vehicle['plate_number'],
+                    ];
+                    
+                    $driver->vehicle_info = $vehicleData;
+                    $driver->save();
+
+                    // Update driver verification
+                    $user->update([
+                        'driver_verified_at' => now()
+                    ]);
+                }
             });
 
             return response()->json([
                 'message' => 'Profile updated successfully',
-                'status' => 'success'
+                'status' => 'success',
+                'user' => auth()->user()->load('driver')
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Failed to update profile',
-                'status' => 'error'
+                'status' => 'error',
+                'error' => $e->getMessage()
             ], 500);
         }
     }

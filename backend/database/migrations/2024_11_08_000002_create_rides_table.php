@@ -21,7 +21,8 @@ return new class extends Migration
             $table->json('origin')->nullable();
             $table->json('destination')->nullable();
             $table->json('driver_location')->nullable();
-            $table->enum('status', ['pending', 'started', 'completed', 'cancelled'])->default('pending');
+            $table->enum('status', ['pending', 'accepted', 'started', 'completed', 'cancelled'])->default('pending');
+            $table->timestamp('accepted_at')->nullable();
             $table->timestamps();
         });
 

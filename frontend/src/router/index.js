@@ -20,7 +20,13 @@ const routes = [
   { path: '/rider/tracking/:rideId', name: 'ride-tracking', component: RideTracking },
   { path: '/driver/dashboard', name: 'driver-dashboard', component: DriverDashboard },
   { path: '/user/edit', name: 'user-edit', component: UserEdit },
-  { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFound }
+  { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFound },
+  {
+    path: '/driver/ride/:rideId',
+    name: 'driver-ride-tracking',
+    component: () => import('@/views/rider/DriverRideTracking.vue'),
+    meta: { requiresAuth: true, role: 'driver' }
+  }
 ]
 
 const router = createRouter({

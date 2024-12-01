@@ -89,9 +89,62 @@ export const rideService = {
   async acceptRide(rideId) {
     try {
       const response = await api.put(`/rides/${rideId}/accept`)
+      
+      console.log('Full Ride Accept Response:', {
+        ride: response.data.ride,
+        driver: response.data.driver
+      })
+
       return response.data
     } catch (error) {
-      console.error('Failed to accept ride:', error)
+      console.error('Ride Acceptance Full Error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        headers: error.response?.headers,
+        message: error.message
+      })
+      throw error
+    }
+  },
+
+  // Helper method to sanitize data
+  sanitizeRideData(ride) {
+    // Remove or replace problematic characters
+    const sanitizedRide = { ...ride }
+    
+    // Example: Clean specific fields
+    if (sanitizedRide.origin) {
+      sanitizedRide.origin = this.cleanString(sanitizedRide.origin)
+    }
+    
+    if (sanitizedRide.destination) {
+      sanitizedRide.destination = this.cleanString(sanitizedRide.destination)
+    }
+    
+    return sanitizedRide
+  },
+
+  cleanString(str) {
+    // Remove non-printable characters and normalize
+    return str.replace(/[^\x20-\x7E]/g, '')
+  },
+
+  async startRide(rideId) {
+    try {
+      const response = await api.put(`/rides/${rideId}/start`)
+      return response.data
+    } catch (error) {
+      console.error('Ride Start Error:', error.response?.data || error.message)
+      throw error
+    }
+  },
+
+  async completeRide(rideId) {
+    try {
+      const response = await api.put(`/rides/${rideId}/complete`)
+      return response.data
+    } catch (error) {
+      console.error('Ride Complete Error:', error.response?.data || error.message)
       throw error
     }
   }

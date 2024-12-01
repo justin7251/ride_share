@@ -42,72 +42,88 @@
             />
           </div>
 
-          <!-- Driver Details Section -->
-          <h2 class="text-lg font-semibold text-gray-900 mb-2">Driver Details</h2>
           <div class="mb-4">
-            <label for="license_number" class="block text-sm font-medium text-gray-700">License Number</label>
-            <input
-              type="text"
-              id="license_number"
-              v-model="driver.license_number"
-              class="mt-1 block w-full pl-3 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              required
-            />
+            <label class="block text-sm font-medium text-gray-700">
+              <input 
+                type="checkbox" 
+                v-model="user.is_driver" 
+                class="mr-2"
+              />
+              I want to be a driver
+            </label>
           </div>
 
-          <div class="mb-4">
-            <label for="vehicle_make" class="block text-sm font-medium text-gray-700">Vehicle Make</label>
-            <input
-              type="text"
-              id="vehicle_make"
-              v-model="driver.vehicle.make"
-              class="mt-1 block w-full pl-3 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              required
-            />
-          </div>
+          <!-- Driver Details Section (Conditionally Rendered) -->
+          <div v-if="user.is_driver" class="driver-details">
+            <h2 class="text-lg font-semibold text-gray-900 mb-2">Driver Details</h2>
+            
+            <div class="mb-4">
+              <label for="license_number" class="block text-sm font-medium text-gray-700">
+                Driver's License Number
+              </label>
+              <input
+                type="text"
+                id="license_number"
+                v-model="driver.license_number"
+                class="mt-1 block w-full pl-3 pr-4 py-2 border rounded-lg"
+                required
+              />
+            </div>
 
-          <div class="mb-4">
-            <label for="vehicle_model" class="block text-sm font-medium text-gray-700">Vehicle Model</label>
-            <input
-              type="text"
-              id="vehicle_model"
-              v-model="driver.vehicle.model"
-              class="mt-1 block w-full pl-3 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              required
-            />
-          </div>
+            <div class="mb-4">
+              <label for="vehicle_make" class="block text-sm font-medium text-gray-700">Vehicle Make</label>
+              <input
+                type="text"
+                id="vehicle_make"
+                v-model="driver.vehicle.make"
+                class="mt-1 block w-full pl-3 pr-4 py-2 border rounded-lg"
+                required
+              />
+            </div>
 
-          <div class="mb-4">
-            <label for="vehicle_color" class="block text-sm font-medium text-gray-700">Vehicle Color</label>
-            <input
-              type="text"
-              id="vehicle_color"
-              v-model="driver.vehicle.color"
-              class="mt-1 block w-full pl-3 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              required
-            />
-          </div>
+            <div class="mb-4">
+              <label for="vehicle_model" class="block text-sm font-medium text-gray-700">Vehicle Model</label>
+              <input
+                type="text"
+                id="vehicle_model"
+                v-model="driver.vehicle.model"
+                class="mt-1 block w-full pl-3 pr-4 py-2 border rounded-lg"
+                required
+              />
+            </div>
 
-          <div class="mb-4">
-            <label for="vehicle_plate_number" class="block text-sm font-medium text-gray-700">Vehicle Plate Number</label>
-            <input
-              type="text"
-              id="vehicle_plate_number"
-              v-model="driver.vehicle.plate_number"
-              class="mt-1 block w-full pl-3 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              required
-            />
-          </div>
+            <div class="mb-4">
+              <label for="vehicle_color" class="block text-sm font-medium text-gray-700">Vehicle Color</label>
+              <input
+                type="text"
+                id="vehicle_color"
+                v-model="driver.vehicle.color"
+                class="mt-1 block w-full pl-3 pr-4 py-2 border rounded-lg"
+                required
+              />
+            </div>
 
-          <div class="mb-4">
-            <label for="vehicle_year" class="block text-sm font-medium text-gray-700">Vehicle Year</label>
-            <input
-              type="number"
-              id="vehicle_year"
-              v-model="driver.vehicle.year"
-              class="mt-1 block w-full pl-3 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              required
-            />
+            <div class="mb-4">
+              <label for="vehicle_plate_number" class="block text-sm font-medium text-gray-700">Vehicle Plate Number</label>
+              <input
+                type="text"
+                id="vehicle_plate_number"
+                v-model="driver.vehicle.plate_number"
+                class="mt-1 block w-full pl-3 pr-4 py-2 border rounded-lg"
+                required
+              />
+            </div>
+
+            <div class="mb-4">
+              <label for="vehicle_year" class="block text-sm font-medium text-gray-700">Vehicle Year</label>
+              <input
+                type="number"
+                id="vehicle_year"
+                v-model="driver.vehicle.year"
+                class="mt-1 block w-full pl-3 pr-4 py-2 border rounded-lg"
+                required
+              />
+            </div>
           </div>
 
           <button
@@ -136,6 +152,7 @@ const user = ref({
   name: '',
   phone: '',
   email: '',
+  is_driver: false
 })
 
 const driver = ref({
@@ -158,11 +175,14 @@ const fetchUserData = async () => {
       name: data.name,
       phone: data.phone,
       email: data.email,
+      is_driver: data.is_driver || false
     }
     
-    driver.value = {
-      license_number: data.license_number,
-      vehicle: data.vehicle || { make: '', model: '', year: '', color: '', plate_number: '' }
+    if (data.is_driver) {
+      driver.value = {
+        license_number: data.license_number,
+        vehicle: data.vehicle || { make: '', model: '', year: '', color: '', plate_number: '' }
+      }
     }
   } catch (error) {
     console.error('Failed to fetch user data:', error)
@@ -174,18 +194,29 @@ const fetchUserData = async () => {
 // Update user data (you can replace this with an API call)
 const updateUser = async () => {
   try {
-    const data = await userService.updateUserWithDriver({
+    const payload = {
+      // User details
       name: user.value.name,
       email: user.value.email,
-      license_number: driver.value.license_number,
-      vehicle: driver.value.vehicle
-    })
+      
+      // Driver status
+      is_driver: user.value.is_driver,
+      
+      // Conditional driver details
+      ...(user.value.is_driver ? {
+        license_number: driver.value.license_number,
+        vehicle: driver.value.vehicle
+      } : {})
+    }
+
+    const response = await userService.updateUserWithDriver(payload)
     
-    if (data.status === 'success') {
+    if (response.status === 'success') {
       router.push('/dashboard')
     }
   } catch (error) {
-    console.error('Failed to update user:', error)
+    console.error('Update failed:', error)
+    // Handle error (show toast, alert, etc.)
   }
 }
 

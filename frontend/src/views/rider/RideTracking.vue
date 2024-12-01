@@ -51,19 +51,43 @@
           </p>
         </div>
 
-        <!-- Driver Details (when available) -->
-        <div v-if="driver" class="mt-6 bg-gray-50 rounded-lg p-4">
-          <div class="flex items-center justify-center space-x-4">
-            <img 
-              :src="driver.photo || '/default-avatar.png'" 
-              alt="Driver" 
-              class="w-16 h-16 rounded-full object-cover"
-            />
-            <div>
-              <h3 class="text-lg font-semibold">{{ driver.name }}</h3>
-              <p class="text-sm text-gray-600">
-                {{ driver.vehicle.model }} ({{ driver.vehicle.color }})
-              </p>
+        <!-- Driver Details Section -->
+        <div v-if="driver" class="mt-6 bg-gray-50 rounded-lg p-4 shadow-sm">
+          <div class="flex items-center space-x-4">
+            <!-- Driver Avatar/Icon -->
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+              <i class="fas fa-user-circle text-blue-500 text-3xl"></i>
+            </div>
+            
+            <!-- Driver Information -->
+            <div class="flex-grow">
+              <h3 class="text-lg font-semibold text-gray-800">
+                {{ driver.name }}
+              </h3>
+              
+              <!-- Vehicle Details -->
+              <div class="text-sm text-gray-600 mt-1">
+                <div class="flex items-center">
+                  <i class="fas fa-car mr-2 text-gray-500"></i>
+                  <span>
+                    {{ driver.vehicle.make }} {{ driver.vehicle.model }} 
+                    ({{ driver.vehicle.color }})
+                  </span>
+                </div>
+                <div class="flex items-center mt-1">
+                  <i class="fas fa-id-badge mr-2 text-gray-500"></i>
+                  <span>Plate: {{ driver.vehicle.plate }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Optional: Driver Rating -->
+            <div class="text-right">
+              <div class="flex items-center justify-end text-yellow-500">
+                <i class="fas fa-star mr-1"></i>
+                <span class="font-semibold">4.5</span>
+              </div>
+              <p class="text-xs text-gray-500">Driver Rating</p>
             </div>
           </div>
         </div>
@@ -92,10 +116,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { rideService } from '@/services/rideService'
 import { etaService } from '@/services/etaService'
+import { websocketService } from '@/services/websocketService'
 
 const router = useRouter()
 const route = useRoute()
@@ -134,7 +159,6 @@ const confirmCancelRide = async () => {
     }, 2000)
   } catch (error) {
     console.error('Failed to cancel ride:', error)
-    // Optionally show an error message to the user
   }
 }
 
@@ -177,6 +201,15 @@ const initializeWebSocket = () => {
   }
 }
 
+// Watch for ride acceptance notification
+watch(() => websocketService.notification.value, (notification) => {
+  if (notification?.type === 'RIDE_ACCEPTED') {
+    // Update driver details when ride is accepted
+    driver.value = notification.driver
+    rideStatus.value = 'Driver assigned!'
+  }
+})
+
 onMounted(async () => {
   try {
     // Track ride details
@@ -189,6 +222,9 @@ onMounted(async () => {
 
     // Initialize WebSocket connection
     initializeWebSocket()
+
+    // Also initialize websocket service
+    websocketService.initializeDriverSocket()
   } catch (error) {
     console.error('Ride tracking error:', error)
     rideStatus.value = 'Unable to track ride'
