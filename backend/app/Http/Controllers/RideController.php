@@ -250,6 +250,34 @@ class RideController extends Controller
         });
     }
 
+    public function updateDriverStatus(Request $request, Ride $ride)
+    {   
+        $validatedData = $request->validate([
+            'status' => 'required|in:pending,accepted,started,completed'
+        ]);
+
+        try {
+            // Update ride status
+            $ride->update([
+                'driver_status' => $validatedData['status']
+            ]);
+
+            // Broadcast status change
+            event(new RideStatusUpdatedEvent($ride));
+
+            return response()->json([
+                'ride' => $ride,
+                'message' => 'Ride status updated successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to update ride status',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function track(Request $request, Ride $ride)
     {
         // Ensure only the ride requester or driver can track
