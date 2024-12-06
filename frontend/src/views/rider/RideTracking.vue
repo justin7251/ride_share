@@ -126,8 +126,8 @@ const router = useRouter()
 const route = useRoute()
 
 const rideId = computed(() => route.params.rideId)
-const pickup = computed(() => route.query.pickup)
-const destination = computed(() => route.query.destination)
+const pickup = ref(null)
+const destination = ref(null)
 
 const rideStatus = ref('Finding your driver...')
 const driver = ref(null)
@@ -166,40 +166,12 @@ const cancelCancellation = () => {
   showCancellationConfirmation.value = false
 }
 
+// Initialize WebSocket connection for status updates
 const initializeWebSocket = () => {
-  socket = new WebSocket(`ws://your-websocket-endpoint/rides/${rideId.value}`)
-
-  socket.onopen = () => {
-    console.log('WebSocket connection established')
-  }
-
-  socket.onmessage = (event) => {
-    const data = JSON.parse(event.data)
-    
-    switch (data.type) {
-      case 'DRIVER_ASSIGNED':
-        driver.value = data.driver
-        rideStatus.value = 'Driver assigned!'
-        break
-      
-      case 'DRIVER_ARRIVED':
-        rideStatus.value = 'Driver has arrived'
-        break
-      
-      case 'RIDE_STARTED':
-        rideStatus.value = 'Ride in progress'
-        break
-      
-      case 'RIDE_COMPLETED':
-        rideStatus.value = 'Ride completed'
-        break
-    }
-  }
-
-  socket.onerror = (error) => {
-    console.error('WebSocket error:', error)
-  }
+  //websocketService
+  websocketService.initializeDriverSocket(rideId.value)
 }
+
 
 // Watch for ride acceptance notification
 watch(() => websocketService.notification.value, (notification) => {
@@ -219,12 +191,11 @@ onMounted(async () => {
     rideDetails.value = trackingDetails
     driver.value = trackingDetails.driver
     rideStatus.value = trackingDetails.status
+    pickup.value = trackingDetails.pickup
+    destination.value = trackingDetails.destination
 
     // Initialize WebSocket connection
     initializeWebSocket()
-
-    // Also initialize websocket service
-    websocketService.initializeDriverSocket()
   } catch (error) {
     console.error('Ride tracking error:', error)
     rideStatus.value = 'Unable to track ride'
