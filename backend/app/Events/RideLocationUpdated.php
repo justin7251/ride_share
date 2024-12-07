@@ -24,7 +24,7 @@ class RideLocationUpdated implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        return new Channel('ride.'.$this->ride->id);
+        return new PrivateChannel('ride.'.$this->ride->id);
     }
 
     public function broadcastAs()
