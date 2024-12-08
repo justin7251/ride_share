@@ -149,7 +149,7 @@ const toggleOnlineStatus = async () => {
 
           if (response.status === 'success') {
             isOnline.value = true;
-            websocketService.initializeDriverSocket();
+            websocketService.initializeSocket();
           }
         }, (error) => {
           console.error('Error getting location:', error);
@@ -164,7 +164,7 @@ const toggleOnlineStatus = async () => {
       const response = await driverService.updateStatus('inactive');
       if (response.status === 'success') {
         isOnline.value = false;
-        websocketService.stopListeningForRides();
+        websocketService.disconnect();
       }
     }
   } catch (error) {
@@ -187,6 +187,6 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  websocketService.stopListeningForRides()
+  websocketService.disconnect()
 })
 </script> 

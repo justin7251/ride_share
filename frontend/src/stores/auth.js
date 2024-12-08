@@ -41,6 +41,29 @@ const auth = reactive({
   
   setAuthenticated(status) {
     this.isAuthenticated = status
+  },
+
+  // Methods aligned with database schema
+  isDriver() {
+    // Check if user is a driver based on is_driver column
+    return this.user?.is_driver === true
+  },
+
+  isDriverVerified() {
+    // Check if driver is verified
+    return this.isDriver() && !!this.user?.driver_verified_at
+  },
+
+  canBecomeDriver() {
+    // Check if user can potentially become a driver
+    return this.user && !this.isDriver()
+  },
+
+  getDriverStatus() {
+    // Provide detailed driver status
+    if (!this.isDriver()) return 'NOT_DRIVER'
+    if (!this.user?.driver_verified_at) return 'PENDING_VERIFICATION'
+    return 'VERIFIED_DRIVER'
   }
 })
 

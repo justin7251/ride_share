@@ -1,13 +1,24 @@
 import Echo from 'laravel-echo'
 import Pusher from 'pusher-js'
 import { ref } from 'vue'
+import auth from '@/stores/auth'
 
 export const websocketService = {
   echo: null,
   notification: ref(null),
+  subscribers: {},
 
-  initializeDriverSocket() {
-    Pusher.logToConsole = true
+  getUserRole() {
+    return auth.isDriver() ? 'DRIVER' : 'PASSENGER'
+  },
+
+  initializeSocket(options = {}) {
+    if (!import.meta.env.VITE_PUSHER_APP_KEY) {
+      console.error('Pusher app key is missing')
+      return null
+    }
+
+    Pusher.logToConsole = import.meta.env.DEV
     window.Pusher = Pusher
 
     try {
@@ -20,80 +31,138 @@ export const websocketService = {
         disableStats: true,
         encrypted: false,
         cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
-        enabledTransports: ['ws', 'wss']
+        enabledTransports: ['ws', 'wss'],
+        ...options
       })
 
-      this.echo.channel('available-rides')
-        .listen('RideRequestEvent', (data) => {
-          console.log('WebSocket Ride Request:', data)
-          this.notification.value = {
-            type: 'NEW_RIDE_REQUEST',
-            ride: data.ride || {},
-            activeDrivers: data.activeDrivers || [],
-            timestamp: new Date()
-          }
-        })
-        .listen('DriverLocationUpdated', (data) => {
-            console.log('Driver Location Updated:', data)
-            this.notification.value = {
-              type: 'DRIVER_LOCATION_UPDATE',
-              location: data.location || {},
-              timestamp: new Date()
-            }
-        })
-        .listen('RideStarted', (data) => {
-            console.log('Ride Started:', data)
-            this.notification.value = {
-            type: 'RIDE_STARTED',
-            ride: data.ride || {},
-            timestamp: new Date()
-            }
-        })
-        .listen('RideCompleted', (data) => {
-            console.log('Ride Completed:', data)
-            this.notification.value = {
-              type: 'RIDE_COMPLETED',
-              ride: data.ride || {},
-              timestamp: new Date()
-            }
-        })
-        .listen('RideCancelled', (data) => {
-            console.log('Ride Cancelled:', data)
-            this.notification.value = {
-            type: 'RIDE_CANCELLED',
-            ride: data.ride || {},
-            reason: data.reason || 'Unspecified',
-            timestamp: new Date()
-          }
-        })
+      const userRole = this.getUserRole()
+
+      if (userRole === 'DRIVER') {
+        this.subscribeToAvailableRides()
+      }
+
+      return this.echo
     } catch (error) {
       console.error('WebSocket Initialization Error:', error)
+      return null
     }
   },
 
-  stopListeningForRides() { 
-    this.echo.channel('available-rides').stopListening('RideRequestEvent')
+  subscribe(channel, callback, options = {}) {
+    if (options.requiredRole && auth.isDriver()) {
+      console.warn(`Subscription requires ${options.requiredRole} role`)
+      return null
+    }
+
+    if (!this.subscribers[channel]) {
+      this.subscribers[channel] = []
+    }
+    this.subscribers[channel].push(callback)
+    return callback
   },
-  clearNotification() {
-    this.notification.value = null
-  },
-  handleRideRequest(data) {
-    this.notification.value = data
-  },
-  handleRideAcceptance(data) {
-    this.notification.value = {
-      type: 'RIDE_ACCEPTED',
-      ride: data.ride,
-      driver: data.driver,
-      timestamp: new Date()
+
+  unsubscribe(channel, callback) {
+    if (this.subscribers[channel]) {
+      this.subscribers[channel] = this.subscribers[channel].filter(
+        cb => cb !== callback
+      )
     }
   },
-  handleRideStart(data) {
+
+  notifySubscribers(channel, data) {
+    if (this.subscribers[channel]) {
+      this.subscribers[channel].forEach(callback => {
+        callback(data)
+      })
+    }
+  },
+
+  subscribeToAvailableRides() {
+    if (!this.echo) return
+
+    this.echo.channel('available-rides')
+      .listen('RideRequestEvent', (data) => {
+        console.log('New Ride Request:', data)
+        this.notification.value = {
+          type: 'NEW_RIDE_REQUEST',
+          ride: data.ride,
+          timestamp: new Date()
+        }
+        this.notifySubscribers('available-rides', data)
+      })
+  },
+
+  subscribeToRideChannel(rideId) {
+    if (!this.echo) return
+
+    return this.echo.private(`ride.${rideId}`)
+      .listen('ride.completed', (data) => {
+        console.log('Ride Completed:', data)
+        this.notification.value = {
+          type: 'RIDE_COMPLETED',
+          ride: data.ride,
+          timestamp: new Date()
+        }
+        this.notifySubscribers(`ride.${rideId}`, {
+          type: 'RIDE_COMPLETED',
+          ride: data.ride
+        })
+      })
+  },
+
+  handleDriverStatusUpdate(data) {
+    console.log('Driver Status Updated:', data)
+    this.notification.value = {
+      type: 'DRIVER_STATUS_UPDATED',
+      status: data.status,
+      timestamp: new Date()
+    }
+    this.notifySubscribers('ride-events', {
+      type: 'DRIVER_STATUS_UPDATED',
+      status: data.status
+    })
+  },
+
+  handleRideStarted(data) {
+    console.log('Ride Started:', data)
     this.notification.value = {
       type: 'RIDE_STARTED',
-      ride: data.ride,
+      ride: data.ride || {},
       timestamp: new Date()
     }
+    this.notifySubscribers('ride-events', {
+      type: 'RIDE_STARTED'
+    })
+  },
+
+  handleRideCompleted(data) {
+    console.log('Ride Completed:', data)
+    this.notification.value = {
+      type: 'RIDE_COMPLETED',
+      ride: data.ride || {},
+      timestamp: new Date()
+    }
+    this.notifySubscribers('ride-events', {
+      type: 'RIDE_COMPLETED'
+    })
+  },
+
+  disconnect() {
+    if (this.echo) {
+      this.echo.disconnect()
+      this.echo = null
+      this.subscribers = {}
+      this.notification.value = null
+    }
+  },
+
+  clearNotification(type = null) {
+    if (type) {
+      if (this.notification.value?.type === type) {
+        this.notification.value = null
+      }
+    } else {
+      this.notification.value = null
+    }
   }
-  
 }

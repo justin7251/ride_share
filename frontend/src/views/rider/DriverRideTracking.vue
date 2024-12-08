@@ -136,39 +136,50 @@
 </style>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { rideService } from '@/services/rideService'
 import { websocketService } from '@/services/websocketService'
+import { toast } from '../../utils/toast'
 
 const route = useRoute()
 const router = useRouter()
 
 // Use route params to get ride ID
 const rideId = computed(() => route.params.rideId)
-
-// Optional: Use query params for additional context
-const origin = computed(() => route.query.origin)
-const destination = computed(() => route.query.destination)
+const origin = ref(null)
+const destination = ref(null)
 
 const ride = ref({
   user: null,
   driver: null,
-  origin: origin.value || '',
+  trackRide: origin.value || '',
   destination: destination.value || '',
   status: 'accepted',
   pickup_lat: null,
   pickup_lng: null,
   destination_lat: null,
-  destination_lng: null
+  destination_lng: null,
+  driverStatus: 'accepted'
 })
+
+
+const onLoadGoogleMaps = () => {
+  // Load Google Maps script
+  const script = document.createElement('script')
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`
+  script.async = true
+  script.defer = true
+  script.onload = initializeMap
+  document.head.appendChild(script)
+}
 
 // Google Maps methods
 const initializeMap = () => {
   // Safely check coordinates
   if (!ride.value.pickup_lat || !ride.value.pickup_lng || 
       !ride.value.destination_lat || !ride.value.destination_lng) {
-    console.error('Incomplete coordinates')
+
     return
   }
 
@@ -216,7 +227,47 @@ const initializeMap = () => {
   )
 }
 
-// Ride Actions
+// WebSocket event handling
+const handleWebSocketEvents = (event) => {
+  switch (event.type) {
+    case 'DRIVER_STATUS_UPDATED':
+      // Update driver status from WebSocket
+      ride.value.driverStatus = event.status
+      break
+    
+    case 'RIDE_STARTED':
+      ride.value.driverStatus = 'In Progress'
+      break
+    
+    case 'RIDE_COMPLETED':
+      ride.value.driverStatus = 'Completed'
+      break
+  }
+}
+
+// Fetch ride details with status
+const fetchRideDetails = async () => {
+  try {
+    const rideDetails = await rideService.trackRide(rideId.value)
+    ride.value = {
+      ...rideDetails.ride,
+      driverStatus: rideDetails.status || 'Pending',
+      driver: rideDetails.driver || null,
+      origin: rideDetails.ride.origin,
+      destination: rideDetails.ride.destination,
+      pickup_lat: rideDetails.ride.pickup_lat,
+      pickup_lng: rideDetails.ride.pickup_lng,
+      destination_lat: rideDetails.ride.destination_lat,
+      destination_lng: rideDetails.ride.destination_lng
+    }
+    initializeMap()
+  } catch (error) {
+    console.error('Failed to fetch ride details:', error)
+    router.push('/dashboard')
+  }
+}
+
+// Action methods
 const navigateToPickup = () => {
   // Implement navigation logic
   console.log('Navigating to pickup')
@@ -225,59 +276,65 @@ const navigateToPickup = () => {
 const startRide = async () => {
   try {
     const response = await rideService.startRide(rideId.value)
-    ride.value = response.ride
-    console.log('Ride:', ride.value)
-    // Update map to show destination route
-    initializeMap()
+    
+    // Update ride status
+    ride.value.driverStatus = 'In Progress'
+    
+    // Optional: Show success notification
+    toast.success('Ride started successfully')
   } catch (error) {
     console.error('Failed to start ride:', error)
+    toast.error('Failed to start ride')
   }
 }
 
 const completeRide = async () => {
   try {
     const response = await rideService.completeRide(rideId.value)
-    router.push('/driver/dashboard')
+    
+    // Update ride status
+    ride.value.driverStatus = 'Completed'
+    
+    // Navigate to earnings or rating
+    // router.push('/driver/earnings')
+    router.push('/dashboard')
   } catch (error) {
     console.error('Failed to complete ride:', error)
+    toast.error('Failed to complete ride')
   }
 }
 
-// Fetch ride details on component mount
-const fetchRideDetails = async () => {
-  try {
-    const rideDetails = await rideService.trackRide(rideId.value)
-    
-    ride.value = {
-      ...rideDetails.ride,
-      driverStatus: rideDetails.status,
-      eta: rideDetails.eta,
-      distance: rideDetails.distance
-    }
-
-    console.log('Ride Details:', ride.value)
-  } catch (error) {
-    console.error('Failed to fetch ride details:', error)
-    router.push('/driver/dashboard')
-  }
-}
-
-onMounted(async () => {
-  await fetchRideDetails()
+onMounted(() => {
+  // Fetch initial ride details
+  fetchRideDetails()
+  onLoadGoogleMaps()
+  // Initialize WebSocket
+  websocketService.initializeSocket()
   
-  // Load Google Maps script
-  const script = document.createElement('script')
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`
-  script.async = true
-  script.defer = true
-  script.onload = initializeMap
-  document.head.appendChild(script)
-
-  websocketService.initializeDriverSocket()
+  // Subscribe to ride events
+  websocketService.subscribeToRideChannel(rideId.value, (event) => {
+    console.log('Ride Channel Event:', event)
+    // Handle specific ride events
+    switch(event.type) {
+      case 'DRIVER_STATUS_UPDATED':
+        ride.value.driverStatus = event.status
+        break
+      case 'RIDE_STARTED':
+        ride.value.driverStatus = 'In Progress'
+        break
+      case 'RIDE_COMPLETED':
+        ride.value.driverStatus = 'Completed'
+        toast.success('Ride completed successfully')
+        router.push('/dashboard')
+        break
+    }
+  })
 })
 
 onUnmounted(() => {
-  websocketService.stopListeningForRides()
+  // Cleanup WebSocket
+  websocketService.unsubscribe(`ride.${rideId.value}`)
+  websocketService.disconnect()
 })
 </script>
 

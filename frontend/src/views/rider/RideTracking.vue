@@ -13,7 +13,7 @@
         </button>
       </div>
 
-      <!-- Ride Request Status Card -->
+      <!-- Ride Tracking Card -->
       <div class="bg-white rounded-lg shadow-xl p-6 text-center relative">
         <!-- Cancel Ride Button -->
         <button 
@@ -24,7 +24,7 @@
           Cancel Ride
         </button>
 
-        <!-- Animated Waiting Illustration -->
+        <!-- Ride Status Visualization -->
         <div class="mb-6 flex justify-center">
           <div class="relative w-32 h-32">
             <div class="absolute inset-0 bg-green-500 opacity-75 rounded-full animate-ping"></div>
@@ -41,7 +41,7 @@
           {{ isRideCancelled ? 'Ride Cancelled' : rideStatus }}
         </h2>
         
-        <!-- Pickup and Destination Info -->
+        <!-- Ride Details -->
         <div class="mb-6 text-gray-600">
           <p class="mb-2">
             <span class="font-semibold">Pickup:</span> {{ pickup }}
@@ -52,9 +52,9 @@
         </div>
 
         <!-- Driver Details Section -->
-        <div v-if="driver" class="mt-6 bg-gray-50 rounded-lg p-4 shadow-sm">
+        <div v-if="driver && driver.name" class="mt-6 bg-gray-50 rounded-lg p-4 shadow-sm">
           <div class="flex items-center space-x-4">
-            <!-- Driver Avatar/Icon -->
+            <!-- Driver Avatar -->
             <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
               <i class="fas fa-user-circle text-blue-500 text-3xl"></i>
             </div>
@@ -81,11 +81,11 @@
               </div>
             </div>
             
-            <!-- Optional: Driver Rating -->
+            <!-- Driver Rating -->
             <div class="text-right">
               <div class="flex items-center justify-end text-yellow-500">
                 <i class="fas fa-star mr-1"></i>
-                <span class="font-semibold">4.5</span>
+                <span class="font-semibold">{{ driver.rating || 'N/A' }}</span>
               </div>
               <p class="text-xs text-gray-500">Driver Rating</p>
             </div>
@@ -116,32 +116,73 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { rideService } from '@/services/rideService'
-import { etaService } from '@/services/etaService'
 import { websocketService } from '@/services/websocketService'
+import { toast } from '@/utils/toast'
 
 const router = useRouter()
 const route = useRoute()
 
+// Ride tracking state
 const rideId = computed(() => route.params.rideId)
 const pickup = ref(null)
 const destination = ref(null)
-
 const rideStatus = ref('Finding your driver...')
 const driver = ref(null)
-const rideDetails = ref(null)
 const isRideCancelled = ref(false)
 const showCancellationConfirmation = ref(false)
 
-// WebSocket connection
-let socket = null
-
-const goBack = () => {
-  router.push('/dashboard')
+// WebSocket event handler
+const handleRideEvents = (event) => {
+  console.log('Ride Event:', event)
+  
+  switch(event.type) {
+    case 'RIDE_ACCEPTED':
+      // Update driver details when ride is accepted
+      driver.value = event.driver
+      rideStatus.value = 'Driver Assigned'
+      toast.success('Driver has been assigned to your ride')
+      break
+    
+    case 'RIDE_STARTED':
+      rideStatus.value = 'Ride in Progress'
+      toast.info('Your ride has started')
+      break
+    
+    case 'RIDE_COMPLETED':
+      rideStatus.value = 'Ride Completed'
+      toast.success('Your ride has been completed')
+      // router.push('/ride-rating')
+      router.push('/dashboard')
+      break
+    
+    case 'DRIVER_STATUS_UPDATED':
+      // Handle any driver status updates
+      rideStatus.value = event.status
+      break
+  }
 }
 
+// Fetch ride details
+const fetchRideDetails = async () => {
+  try {
+    const trackingDetails = await rideService.trackRide(rideId.value)
+    
+    // Update component state
+    driver.value = trackingDetails.driver
+    rideStatus.value = trackingDetails.status
+    pickup.value = trackingDetails.ride.origin
+    destination.value = trackingDetails.ride.destination
+  } catch (error) {
+    console.error('Ride tracking error:', error)
+    toast.error('Unable to track ride')
+    router.push('/dashboard')
+  }
+}
+
+// Ride cancellation methods
 const cancelRide = () => {
   showCancellationConfirmation.value = true
 }
@@ -149,16 +190,20 @@ const cancelRide = () => {
 const confirmCancelRide = async () => {
   try {
     await rideService.cancelRide(rideId.value)
+    
     isRideCancelled.value = true
     rideStatus.value = 'Ride Cancelled'
     showCancellationConfirmation.value = false
     
-    // Navigate back to ride search after a short delay
+    toast.info('Ride has been cancelled')
+    
+    // Navigate back after a short delay
     setTimeout(() => {
       router.push('/dashboard')
     }, 2000)
   } catch (error) {
     console.error('Failed to cancel ride:', error)
+    toast.error('Failed to cancel ride')
   }
 }
 
@@ -166,49 +211,28 @@ const cancelCancellation = () => {
   showCancellationConfirmation.value = false
 }
 
-// Initialize WebSocket connection for status updates
-const initializeWebSocket = () => {
-  //websocketService
-  websocketService.initializeDriverSocket(rideId.value)
+// Navigation
+const goBack = () => {
+  router.push('/dashboard')
 }
 
-
-// Watch for ride acceptance notification
-watch(() => websocketService.notification.value, (notification) => {
-  if (notification?.type === 'RIDE_ACCEPTED') {
-    // Update driver details when ride is accepted
-    driver.value = notification.driver
-    rideStatus.value = 'Driver assigned!'
-  }
-})
-
-onMounted(async () => {
-  try {
-    // Track ride details
-    const trackingDetails = await rideService.trackRide(rideId.value)
-    
-    // Update component state
-    rideDetails.value = trackingDetails
-    driver.value = trackingDetails.driver
-    rideStatus.value = trackingDetails.status
-    pickup.value = trackingDetails.pickup
-    destination.value = trackingDetails.destination
-
-    // Initialize WebSocket connection
-    initializeWebSocket()
-  } catch (error) {
-    console.error('Ride tracking error:', error)
-    rideStatus.value = 'Unable to track ride'
-  }
+onMounted(() => {
+  // Fetch initial ride details
+  fetchRideDetails()
+  
+  // Initialize WebSocket
+  websocketService.initializeSocket()
+  
+  // Subscribe to specific ride channel
+  websocketService.subscribeToRideChannel(`ride.${rideId.value}`)
+  
+  // Add event listener for ride updates
+  websocketService.subscribe(`ride.${rideId.value}`, handleRideEvents)
 })
 
 onUnmounted(() => {
-  // Clean up WebSocket connection
-  if (socket) {
-    socket.close()
-  }
-  
-  // Stop ride tracking
-  etaService.stopTracking(rideId.value)
+  // Cleanup WebSocket subscriptions
+  websocketService.unsubscribe(`ride.${rideId.value}`, handleRideEvents)
+  websocketService.disconnect()
 })
 </script>

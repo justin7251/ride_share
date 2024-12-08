@@ -42,12 +42,13 @@ const acceptRide = async () => {
   try {
     const { ride: acceptedRide } = await rideService.acceptRide(ride.id)
     
-    // Route to driver ride tracking with full ride details
+    // Subscribe to this specific ride's channel
+    websocketService.subscribeToRideChannel(acceptedRide.id)
+    
     router.push({
       name: 'driver-ride-tracking', 
       params: { rideId: acceptedRide.id },
       query: {
-        // Optional: Pass additional context if needed
         origin: acceptedRide.origin,
         destination: acceptedRide.destination,
         driver: acceptedRide.driver,

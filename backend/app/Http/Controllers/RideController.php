@@ -35,7 +35,8 @@ class RideController extends Controller
                     'pickup_lat' => $request->pickupLat,
                     'pickup_lng' => $request->pickupLng,
                     'destination_lat' => $request->destinationLat,
-                    'destination_lng' => $request->destinationLng
+                    'destination_lng' => $request->destinationLng,
+                    'status' => 'pending'
                 ], // Search attributes
                 [
                     'driver_id' => null
