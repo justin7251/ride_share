@@ -154,8 +154,7 @@ const handleRideEvents = (event) => {
     case 'RIDE_COMPLETED':
       rideStatus.value = 'Ride Completed'
       toast.success('Your ride has been completed')
-      // router.push('/ride-rating')
-      router.push('/dashboard')
+      router.push('/ride-rating')
       break
     
     case 'DRIVER_STATUS_UPDATED':
